@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BackButton from './BackButton';
+import { supabase } from '../lib/supabaseClient';
 
 
 const useIsDark = () => {
@@ -15,50 +16,76 @@ const Maestros = () => {
   const navigate = useNavigate();
   const onBack = () => navigate('/');
 
-  const recursos = [
+  const defaultRecursos = [
     {
-      nombre: "Cuadernillos",
-      descripcion: "Planeación didáctica y recursos educativos",
-      icono: "📚",
+      name: "Cuadernillos",
+      description: "Planeación didáctica y recursos educativos",
+      icon: "📚",
       url: "http://www.planeaciondidactica.sems.gob.mx/login",
       color: "#007bff"
     },
     {
-      nombre: "SISEEMS",
-      descripcion: "Sistema de Evaluación y Seguimiento",
-      icono: "📊",
+      name: "SISEEMS",
+      description: "Sistema de Evaluación y Seguimiento",
+      icon: "📊",
       url: "http://168.255.121.25/develop/index.php?",
       color: "#28a745"
     },
     {
-      nombre: "Talón de Pago",
-      descripcion: "Portal de autoservicios SEMS",
-      icono: "💰",
+      name: "Talón de Pago",
+      description: "Portal de autoservicios SEMS",
+      icon: "💰",
       url: "https://portalautoservicios-sems.sep.gob.mx/login.jsp",
       color: "#ffc107"
     },
     {
-      nombre: "DGETAYCM México",
-      descripción: "Dirección General de Educación Tecnológica Agropecuaria y Ciencias del Mar",
-      icono: "🏛️",
+      name: "DGETAYCM México",
+      description: "Dirección General de Educación Tecnológica Agropecuaria y Ciencias del Mar",
+      icon: "🏛️",
       url: "https://dgetaycm.sep.gob.mx/",
       color: "#dc3545"
     },
     {
-      nombre: "SEP Tlaxcala",
-      descripcion: "Secretaría de Educación Pública Tlaxcala",
-      icono: "🏢",
+      name: "SEP Tlaxcala",
+      description: "Secretaría de Educación Pública Tlaxcala",
+      icon: "🏢",
       url: "https://www.septlaxcala.gob.mx",
       color: "#6f42c1"
     },
     {
-      nombre: "Oficina Virtual ISSSTE",
-      descripcion: "Instituto de Seguridad y Servicios Sociales",
-      icono: "🏥",
+      name: "Oficina Virtual ISSSTE",
+      description: "Instituto de Seguridad y Servicios Sociales",
+      icon: "🏥",
       url: "https://oficinavirtual.issste.gob.mx/",
       color: "#20c997"
     }
   ];
+
+  const [teachersConfig, setTeachersConfig] = useState(null);
+  const [teacherLinks, setTeacherLinks] = useState([]);
+
+  useEffect(() => {
+    const fetchTeachersData = async () => {
+      const { data: configData } = await supabase
+        .from('teachers_config')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const { data: linksData } = await supabase
+        .from('teachers_links')
+        .select('*')
+        .order('order_index', { ascending: true });
+
+      setTeachersConfig(configData || null);
+      setTeacherLinks((linksData || []).filter((item) => item.is_active !== false));
+    };
+
+    fetchTeachersData();
+  }, []);
+
+  const recursos = teacherLinks.length > 0 ? teacherLinks : defaultRecursos;
 
   const isDark = useIsDark();
 
@@ -71,7 +98,7 @@ const Maestros = () => {
 
   const heroStyle = {
     height: '400px',
-    backgroundImage: 'url("/images/maestros-hero.png")',
+    backgroundImage: `url("${teachersConfig?.hero_image_url || '/images/maestros-hero.png'}")`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     position: 'relative',
@@ -171,9 +198,11 @@ const Maestros = () => {
       <div style={heroStyle}>
         <div style={overlayStyle}></div>
         <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '0 20px' }}>
-          <h1 style={{ ...titleStyle, color: 'white', marginBottom: '10px' }}>👨‍🏫 Portal Docente</h1>
+          <h1 style={{ ...titleStyle, color: 'white', marginBottom: '10px' }}>
+            {teachersConfig?.title || '👨‍🏫 Portal Docente'}
+          </h1>
           <p style={{ ...subtitleStyle, color: 'rgba(255,255,255,0.9)', marginBottom: '20px' }}>
-            Gestiona los recursos educativos y el control de alumnos de la institución.
+            {teachersConfig?.subtitle || 'Gestiona los recursos educativos y el control de alumnos de la institución.'}
           </p>
           <button
             onClick={() => navigate('/maestros/admin')}
@@ -189,7 +218,7 @@ const Maestros = () => {
               boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
             }}
           >
-            ⚙️ Panel Administrativo (Ingresar)
+            {teachersConfig?.cta_label || '⚙️ Panel Administrativo (Ingresar)'}
           </button>
         </div>
       </div>
@@ -215,11 +244,11 @@ const Maestros = () => {
             >
               <div style={contentStyle}>
                 <h3 style={{ ...recursoTitleStyle, color: recurso.color }}>
-                  <span style={{ fontSize: '24px' }}>{recurso.icono}</span>
-                  {recurso.nombre}
+                  <span style={{ fontSize: '24px' }}>{recurso.icon}</span>
+                  {recurso.name}
                 </h3>
                 <p style={descriptionStyle}>
-                  {recurso.descripcion}
+                  {recurso.description}
                 </p>
                 <button
                   style={{ ...buttonStyle, backgroundColor: 'var(--primary-color)' }}

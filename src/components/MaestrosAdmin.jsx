@@ -198,6 +198,26 @@ const MaestrosAdmin = () => {
     const [homeOptionFile, setHomeOptionFile] = useState(null);
     const [uploadingHomeOption, setUploadingHomeOption] = useState(false);
 
+    // Estados para Maestros (Portal Docente)
+    const [teachersConfig, setTeachersConfig] = useState(null);
+    const [teachersConfigForm, setTeachersConfigForm] = useState({
+        title: '',
+        subtitle: '',
+        hero_image_url: '',
+        cta_label: ''
+    });
+    const [teacherLinks, setTeacherLinks] = useState([]);
+    const [teacherLinkForm, setTeacherLinkForm] = useState({
+        name: '',
+        description: '',
+        icon: '',
+        url: '',
+        color: '',
+        order_index: '',
+        is_active: true
+    });
+    const [editingTeacherLink, setEditingTeacherLink] = useState(null);
+
     // Estados para Créditos
     const [creditsConfig, setCreditsConfig] = useState(null);
     const [creditsConfigForm, setCreditsConfigForm] = useState({
@@ -343,6 +363,7 @@ const MaestrosAdmin = () => {
         fetchClubs();
         fetchAdmissionData();
         fetchBaetamData();
+        fetchTeachersData();
         fetchContactData();
         fetchAboutData();
         fetchGalleryData();
@@ -1264,6 +1285,94 @@ const MaestrosAdmin = () => {
         if (window.confirm('¿Eliminar esta línea?')) {
             const { error } = await supabase.from('baetam_contact_lines').delete().eq('id', id);
             if (!error) fetchBaetamData();
+        }
+    };
+
+    // MAESTROS (PORTAL DOCENTE)
+    const fetchTeachersData = async () => {
+        const { data: configData } = await supabase
+            .from('teachers_config')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        const { data: linksData } = await supabase
+            .from('teachers_links')
+            .select('*')
+            .order('order_index', { ascending: true });
+
+        setTeachersConfig(configData || null);
+        setTeachersConfigForm({
+            title: configData?.title || '',
+            subtitle: configData?.subtitle || '',
+            hero_image_url: configData?.hero_image_url || '',
+            cta_label: configData?.cta_label || ''
+        });
+        setTeacherLinks(linksData || []);
+    };
+
+    const handleSaveTeachersConfig = async (e) => {
+        e.preventDefault();
+        const payload = { ...teachersConfigForm };
+
+        if (teachersConfig?.id) {
+            const { error } = await supabase
+                .from('teachers_config')
+                .update(payload)
+                .eq('id', teachersConfig.id);
+            if (!error) fetchTeachersData();
+        } else {
+            const { error } = await supabase
+                .from('teachers_config')
+                .insert([payload]);
+            if (!error) fetchTeachersData();
+        }
+    };
+
+    const handleSaveTeacherLink = async (e) => {
+        e.preventDefault();
+        if (!teacherLinkForm.name || !teacherLinkForm.url) return;
+
+        const orderIndex = teacherLinkForm.order_index
+            ? parseInt(teacherLinkForm.order_index, 10)
+            : teacherLinks.length + 1;
+
+        const payload = {
+            name: teacherLinkForm.name,
+            description: teacherLinkForm.description,
+            icon: teacherLinkForm.icon,
+            url: teacherLinkForm.url,
+            color: teacherLinkForm.color,
+            order_index: orderIndex,
+            is_active: teacherLinkForm.is_active
+        };
+
+        if (editingTeacherLink) {
+            const { error } = await supabase
+                .from('teachers_links')
+                .update(payload)
+                .eq('id', editingTeacherLink.id);
+            if (!error) {
+                setEditingTeacherLink(null);
+                setTeacherLinkForm({ name: '', description: '', icon: '', url: '', color: '', order_index: '', is_active: true });
+                fetchTeachersData();
+            }
+        } else {
+            const { error } = await supabase
+                .from('teachers_links')
+                .insert([payload]);
+            if (!error) {
+                setTeacherLinkForm({ name: '', description: '', icon: '', url: '', color: '', order_index: '', is_active: true });
+                fetchTeachersData();
+            }
+        }
+    };
+
+    const handleDeleteTeacherLink = async (id) => {
+        if (window.confirm('¿Eliminar este recurso?')) {
+            const { error } = await supabase.from('teachers_links').delete().eq('id', id);
+            if (!error) fetchTeachersData();
         }
     };
 
@@ -2866,6 +2975,14 @@ const MaestrosAdmin = () => {
                             : (darkMode ? 'text-slate-400 hover:bg-slate-800' : 'text-slate-600 hover:bg-slate-50')}`}
                     >
                         <span className="material-symbols-outlined">engineering</span> Carreras
+                    </button>
+                    <button
+                        onClick={() => { setActiveNav('maestros'); setSidebarOpen(false); }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeNav === 'maestros' 
+                            ? (darkMode ? 'bg-blue-900/20 text-blue-400' : 'bg-blue-50 text-blue-800') 
+                            : (darkMode ? 'text-slate-400 hover:bg-slate-800' : 'text-slate-600 hover:bg-slate-50')}`}
+                    >
+                        <span className="material-symbols-outlined">co_present</span> Maestros
                     </button>
                     <button
                         onClick={() => { setActiveNav('admission'); setSidebarOpen(false); }}
@@ -4474,7 +4591,7 @@ const MaestrosAdmin = () => {
                     </div>
                 )}
 
-                {(activeNav === 'dashboard' || activeNav === 'alumnos' || activeNav === 'avisos' || activeNav === 'clubes' || activeNav === 'carreras' || activeNav === 'chatbot' || activeNav === 'gmail' || activeNav === 'storage' || activeNav === 'access') && (
+                {(activeNav === 'dashboard' || activeNav === 'alumnos' || activeNav === 'avisos' || activeNav === 'clubes' || activeNav === 'carreras' || activeNav === 'maestros' || activeNav === 'chatbot' || activeNav === 'gmail' || activeNav === 'storage' || activeNav === 'access') && (
                 <div className="max-w-6xl mx-auto space-y-10">
                     {activeNav === 'dashboard' && (
                         <section className={`rounded-[2rem] p-6 md:p-8 border ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-white shadow-slate-200/50 shadow-xl'}`}>
@@ -4484,6 +4601,7 @@ const MaestrosAdmin = () => {
                                     { key: 'avisos', label: 'Avisos', icon: 'campaign' },
                                     { key: 'clubes', label: 'Clubes', icon: 'sports_esports' },
                                     { key: 'carreras', label: 'Carreras', icon: 'engineering' },
+                                    { key: 'maestros', label: 'Maestros', icon: 'co_present' },
                                     { key: 'alumnos', label: 'Alumnos', icon: 'group' },
                                     { key: 'chatbot', label: 'IA Chatbot', icon: 'smart_toy' },
                                     { key: 'gmail', label: 'Notificaciones Gmail', icon: 'mail' },
@@ -4749,6 +4867,152 @@ const MaestrosAdmin = () => {
                                             </div>
                                         ))
                                     )}
+                                </div>
+                            </section>
+                        </>
+                    )}
+
+                    {activeNav === 'maestros' && (
+                        <>
+                            <section>
+                                <div className={`rounded-[2rem] p-6 md:p-8 border ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-white shadow-slate-200/50 shadow-xl'}`}>
+                                    <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-blue-800">co_present</span> Configuración Portal Docente
+                                    </h3>
+                                    <form onSubmit={handleSaveTeachersConfig} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <input
+                                            type="text"
+                                            placeholder="Título"
+                                            value={teachersConfigForm.title}
+                                            onChange={(e) => setTeachersConfigForm({ ...teachersConfigForm, title: e.target.value })}
+                                            className={`p-3 rounded-xl border ${darkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Subtítulo"
+                                            value={teachersConfigForm.subtitle}
+                                            onChange={(e) => setTeachersConfigForm({ ...teachersConfigForm, subtitle: e.target.value })}
+                                            className={`p-3 rounded-xl border ${darkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="URL de imagen principal"
+                                            value={teachersConfigForm.hero_image_url}
+                                            onChange={(e) => setTeachersConfigForm({ ...teachersConfigForm, hero_image_url: e.target.value })}
+                                            className={`p-3 rounded-xl border ${darkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Texto del botón"
+                                            value={teachersConfigForm.cta_label}
+                                            onChange={(e) => setTeachersConfigForm({ ...teachersConfigForm, cta_label: e.target.value })}
+                                            className={`p-3 rounded-xl border ${darkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}
+                                        />
+                                        <div className="md:col-span-2">
+                                            <button type="submit" className="px-6 py-3 bg-blue-800 text-white font-bold rounded-xl">Guardar Configuración</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </section>
+
+                            <section>
+                                <div className={`rounded-[2rem] p-6 md:p-8 border ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-white shadow-slate-200/50 shadow-xl'}`}>
+                                    <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-blue-800">link</span> Recursos Docentes
+                                    </h3>
+                                    <form onSubmit={handleSaveTeacherLink} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <input
+                                            type="text"
+                                            placeholder="Nombre"
+                                            value={teacherLinkForm.name}
+                                            onChange={(e) => setTeacherLinkForm({ ...teacherLinkForm, name: e.target.value })}
+                                            className={`p-3 rounded-xl border ${darkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}
+                                        />
+                                        <input
+                                            type="url"
+                                            placeholder="URL"
+                                            value={teacherLinkForm.url}
+                                            onChange={(e) => setTeacherLinkForm({ ...teacherLinkForm, url: e.target.value })}
+                                            className={`p-3 rounded-xl border ${darkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Descripción"
+                                            value={teacherLinkForm.description}
+                                            onChange={(e) => setTeacherLinkForm({ ...teacherLinkForm, description: e.target.value })}
+                                            className={`p-3 rounded-xl border ${darkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Icono (emoji)"
+                                            value={teacherLinkForm.icon}
+                                            onChange={(e) => setTeacherLinkForm({ ...teacherLinkForm, icon: e.target.value })}
+                                            className={`p-3 rounded-xl border ${darkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Color (hex o nombre)"
+                                            value={teacherLinkForm.color}
+                                            onChange={(e) => setTeacherLinkForm({ ...teacherLinkForm, color: e.target.value })}
+                                            className={`p-3 rounded-xl border ${darkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}
+                                        />
+                                        <input
+                                            type="number"
+                                            placeholder="Orden (opcional)"
+                                            value={teacherLinkForm.order_index}
+                                            onChange={(e) => setTeacherLinkForm({ ...teacherLinkForm, order_index: e.target.value })}
+                                            className={`p-3 rounded-xl border ${darkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}
+                                        />
+                                        <label className="flex items-center gap-2 text-sm">
+                                            <input
+                                                type="checkbox"
+                                                checked={teacherLinkForm.is_active}
+                                                onChange={(e) => setTeacherLinkForm({ ...teacherLinkForm, is_active: e.target.checked })}
+                                            />
+                                            Visible en el portal
+                                        </label>
+                                        <div className="md:col-span-2">
+                                            <button type="submit" className="px-6 py-3 bg-blue-800 text-white font-bold rounded-xl">
+                                                {editingTeacherLink ? 'Actualizar' : 'Agregar'}
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    <div className="mt-6 space-y-3">
+                                        {teacherLinks.map((item) => (
+                                            <div key={item.id} className={`p-4 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 ${darkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
+                                                <div>
+                                                    <div className="font-semibold flex items-center gap-2">
+                                                        <span>{item.icon || '🔗'}</span>
+                                                        <span>{item.name}</span>
+                                                        {!item.is_active && <span className="text-xs text-slate-500">(oculto)</span>}
+                                                    </div>
+                                                    <div className="text-sm text-slate-500">{item.description}</div>
+                                                    <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500">{item.url}</a>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <button
+                                                        onClick={() => {
+                                                            setEditingTeacherLink(item);
+                                                            setTeacherLinkForm({
+                                                                name: item.name || '',
+                                                                description: item.description || '',
+                                                                icon: item.icon || '',
+                                                                url: item.url || '',
+                                                                color: item.color || '',
+                                                                order_index: item.order_index || '',
+                                                                is_active: item.is_active !== false
+                                                            });
+                                                        }}
+                                                        className="text-blue-500"
+                                                    >
+                                                        Editar
+                                                    </button>
+                                                    <button onClick={() => handleDeleteTeacherLink(item.id)} className="text-red-500">Eliminar</button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             </section>
                         </>
