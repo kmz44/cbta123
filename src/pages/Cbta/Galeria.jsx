@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import BackButton from '../../components/BackButton';
+import { supabase } from '../../lib/supabaseClient';
 
 const useIsDark = () => {
   if (typeof document === 'undefined') return false;
@@ -8,6 +9,7 @@ const useIsDark = () => {
 
 const Galeria = ({ setCurrentView }) => {
   const isDark = useIsDark();
+  const [galleryItems, setGalleryItems] = useState([]);
 
   const pageStyle = {
     paddingTop: '80px',
@@ -78,7 +80,7 @@ const Galeria = ({ setCurrentView }) => {
     paddingBottom: '10px'
   };
 
-  // Datos de la galería
+  // Datos de la galería (fallback si la BD está vacía)
   const instalaciones = [
     {
       src: '/assets/instalaciones/uno.jpg',
@@ -288,6 +290,39 @@ const Galeria = ({ setCurrentView }) => {
     </div>
   );
 
+  useEffect(() => {
+    const fetchGallery = async () => {
+      const { data } = await supabase
+        .from('gallery_items')
+        .select('*')
+        .order('order_index', { ascending: true });
+
+      setGalleryItems(data || []);
+    };
+
+    fetchGallery();
+  }, []);
+
+  const grouped = useMemo(() => {
+    if (galleryItems.length === 0) {
+      return {
+        instalaciones,
+        actividades,
+        clubs,
+        cbta,
+        galeria
+      };
+    }
+
+    return {
+      instalaciones: galleryItems.filter((i) => i.section === 'instalaciones'),
+      actividades: galleryItems.filter((i) => i.section === 'actividades'),
+      clubs: galleryItems.filter((i) => i.section === 'clubs'),
+      cbta: galleryItems.filter((i) => i.section === 'cbta'),
+      galeria: galleryItems.filter((i) => i.section === 'galeria')
+    };
+  }, [galleryItems]);
+
   return (
     <div style={pageStyle}>
       <BackButton onClick={() => setCurrentView('home')} />
@@ -297,8 +332,8 @@ const Galeria = ({ setCurrentView }) => {
         <section>
           <h2 style={sectionTitleStyle}>🏫 Nuestras Instalaciones</h2>
           <div style={galleryStyle}>
-            {instalaciones.map((item, index) => (
-              <ImageCard key={index} {...item} />
+            {grouped.instalaciones.map((item, index) => (
+              <ImageCard key={item.id || index} src={item.image_url || item.src} title={item.title} desc={item.desc || item.description} />
             ))}
           </div>
         </section>
@@ -306,8 +341,8 @@ const Galeria = ({ setCurrentView }) => {
         <section>
           <h2 style={sectionTitleStyle}>🏃‍♂️ Actividades Deportivas</h2>
           <div style={galleryStyle}>
-            {actividades.map((item, index) => (
-              <ImageCard key={index} {...item} />
+            {grouped.actividades.map((item, index) => (
+              <ImageCard key={item.id || index} src={item.image_url || item.src} title={item.title} desc={item.desc || item.description} />
             ))}
           </div>
         </section>
@@ -315,8 +350,8 @@ const Galeria = ({ setCurrentView }) => {
         <section>
           <h2 style={sectionTitleStyle}>🎭Participaciones de nuestros Clubes</h2>
           <div style={galleryStyle}>
-            {clubs.map((item, index) => (
-              <ImageCard key={index} {...item} />
+            {grouped.clubs.map((item, index) => (
+              <ImageCard key={item.id || index} src={item.image_url || item.src} title={item.title} desc={item.desc || item.description} />
             ))}
           </div>
         </section>
@@ -324,8 +359,8 @@ const Galeria = ({ setCurrentView }) => {
         <section>
           <h2 style={sectionTitleStyle}>️ CBTa 134</h2>
           <div style={galleryStyle}>
-            {cbta.map((item, index) => (
-              <ImageCard key={index} {...item} />
+            {grouped.cbta.map((item, index) => (
+              <ImageCard key={item.id || index} src={item.image_url || item.src} title={item.title} desc={item.desc || item.description} />
             ))}
           </div>
         </section>
@@ -333,8 +368,8 @@ const Galeria = ({ setCurrentView }) => {
         <section>
           <h2 style={sectionTitleStyle}>📸 Galería General</h2>
           <div style={galleryStyle}>
-            {galeria.map((item, index) => (
-              <ImageCard key={index} {...item} />
+            {grouped.galeria.map((item, index) => (
+              <ImageCard key={item.id || index} src={item.image_url || item.src} title={item.title} desc={item.desc || item.description} />
             ))}
           </div>
         </section>

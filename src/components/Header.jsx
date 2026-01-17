@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
 
 const Header = ({ 
   toggleMode, 
@@ -12,6 +13,8 @@ const Header = ({
   carrerasOptions 
 }) => {
   const [showCarrerasMenu, setShowCarrerasMenu] = useState(false);
+  const [headerConfig, setHeaderConfig] = useState(null);
+  const [headerLinks, setHeaderLinks] = useState([]);
 
   const handleNavClick = (path) => (e) => {
     e.preventDefault();
@@ -23,12 +26,33 @@ const Header = ({
     setShowCarrerasMenu(!showCarrerasMenu);
   };
 
+  useEffect(() => {
+    const fetchHeader = async () => {
+      const { data: configData } = await supabase
+        .from('ui_header_config')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      const { data: linksData } = await supabase
+        .from('ui_header_links')
+        .select('*')
+        .order('order_index', { ascending: true });
+
+      setHeaderConfig(configData || null);
+      setHeaderLinks(linksData || []);
+    };
+
+    fetchHeader();
+  }, []);
+
   return (
     <header className="header">
       <div className="header-container">
         <div className="logo-title">
           <img 
-            src="/images/cbta134.png" 
+            src={headerConfig?.logo_url || "/images/cbta134.png"} 
             alt="Logo CBTA 134" 
             className="logo"
             onClick={() => setCurrentView('home')}
@@ -39,27 +63,26 @@ const Header = ({
             onClick={() => setCurrentView('home')}
             style={{ cursor: 'pointer' }}
           >
-            Centro de Bachillerato Tecnológico Agropecuario 134
+            {headerConfig?.title_text || 'Centro de Bachillerato Tecnológico Agropecuario 134'}
           </h1>
         </div>
 
         <nav className={`main-nav ${isNavActive ? 'active' : ''}`}>
-          <div className="theme-controls">
-            <button 
-              className={`auto-mode-toggle ${isAutoMode ? 'active' : ''}`}
-              onClick={toggleAutoMode}
-              title={isAutoMode ? 'Desactivar modo automático' : 'Activar modo automático (6 AM - 6 PM)'}
-            >
-              {isAutoMode ? '🕐 AUTO' : '🕐 MANUAL'}
-            </button>
-            <button 
-              className="theme-toggle"
-              onClick={toggleMode}
-              title={`Cambiar a modo ${isLightMode ? 'oscuro' : 'claro'}`}
-            >
-              {isLightMode ? '🌙' : '☀️'}
-            </button>
-          </div>
+          {headerLinks.length > 0 && (
+            <ul>
+              {headerLinks.map((link) => (
+                <li key={link.id}>
+                  <a
+                    href={link.href}
+                    onClick={handleNavClick(link.path)}
+                    className="nav-link"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
         </nav>
       </div>
     </header>

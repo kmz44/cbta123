@@ -1,68 +1,79 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import BackButton from './BackButton';
-
-// Helper para detectar modo oscuro (se basa en la clase que gestiona App.jsx)
-const useIsDark = () => {
-  if (typeof document === 'undefined') return false;
-  return document.body.classList.contains('dark-mode');
-};
+import { supabase } from '../lib/supabaseClient';
 
 const AcercaDeCBTa134 = ({ onBack }) => {
+  const [aboutConfig, setAboutConfig] = useState(null);
+  const [aboutValues, setAboutValues] = useState([]);
+
+  useEffect(() => {
+    const fetchAboutData = async () => {
+      const { data: configData } = await supabase
+        .from('about_config')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      const { data: valuesData } = await supabase
+        .from('about_values')
+        .select('*')
+        .order('order_index', { ascending: true });
+
+      setAboutConfig(configData || null);
+      setAboutValues(valuesData || []);
+    };
+
+    fetchAboutData();
+  }, []);
   const containerStyle = {
     minHeight: '100vh',
     paddingTop: '80px',
-    padding: '80px 20px 40px'
+    padding: '80px 20px 40px',
+    backgroundColor: '#ffffff' // Fondo blanco
   };
 
-  const isDark = useIsDark();
-
   const cardStyle = {
-    background: isDark ? 'rgba(8,12,18,0.6)' : 'rgba(255, 255, 255, 0.95)',
+    background: 'rgba(255, 255, 255, 0.95)',
     borderRadius: '20px',
     padding: '30px',
     maxWidth: '1000px',
     width: '100%',
     margin: '0 auto',
-    boxShadow: isDark ? '0 8px 30px rgba(0,0,0,0.6)' : '0 15px 35px rgba(0, 0, 0, 0.1)',
-    backdropFilter: 'blur(8px)',
-    overflow: 'hidden',
-    border: isDark ? '1px solid rgba(255,255,255,0.04)' : 'none'
+    boxShadow: '0 15px 35px rgba(0, 0, 0, 0.1)',
+    overflow: 'hidden'
   };
 
   const titleStyle = {
     fontSize: '2.5rem',
     fontWeight: 'bold',
-    color: '#2c3e50',
     textAlign: 'center',
     marginBottom: '40px',
-    background: 'linear-gradient(135deg, #28a745, #20c997)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text'
+    color: '#28a745'
   };
 
   const sectionStyle = {
     marginBottom: '40px',
     padding: '20px',
     borderRadius: '15px',
-    background: isDark ? 'rgba(255,255,255,0.02)' : 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-    border: isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid #28a745'
+    backgroundColor: '#f8f9fa',
+    border: '1px solid #28a745'
   };
 
   const sectionTitleStyle = {
     fontSize: '1.8rem',
     fontWeight: 'bold',
-    color: '#2c3e50',
+    color: '#28a745',
     marginBottom: '20px',
     textAlign: 'center'
   };
 
   const subsectionStyle = {
-    background: isDark ? 'rgba(255,255,255,0.03)' : 'white',
+    backgroundColor: '#ffffff',
     borderRadius: '10px',
     padding: '20px',
     marginBottom: '20px',
-    boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.6)' : '0 2px 10px rgba(0, 0, 0, 0.05)'
+    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)'
   };
 
   const subsectionTitleStyle = {
@@ -77,7 +88,7 @@ const AcercaDeCBTa134 = ({ onBack }) => {
 
   const textStyle = {
     fontSize: '1rem',
-    color: isDark ? '#d0e6ff' : '#555',
+    color: '#555',
     lineHeight: '1.8',
     textAlign: 'justify',
     marginBottom: '0'
@@ -91,13 +102,12 @@ const AcercaDeCBTa134 = ({ onBack }) => {
   };
 
   const valorStyle = {
-    background: isDark ? 'rgba(255,255,255,0.03)' : 'white',
+    backgroundColor: '#ffffff',
     borderRadius: '10px',
     padding: '20px',
     textAlign: 'center',
-    boxShadow: isDark ? '0 8px 20px rgba(0,0,0,0.6)' : '0 2px 10px rgba(0, 0, 0, 0.05)',
-    transition: 'transform 0.3s ease',
-    border: isDark ? '1px solid rgba(255,255,255,0.04)' : 'none'
+    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
+    transition: 'transform 0.3s ease'
   };
 
   const logoStyle = {
@@ -105,11 +115,24 @@ const AcercaDeCBTa134 = ({ onBack }) => {
     marginBottom: '30px'
   };
 
+  const croquisStyle = {
+    textAlign: 'center',
+    marginBottom: '30px'
+  };
+
+  const croquisImgStyle = {
+    width: '100%',
+    maxWidth: '900px',
+    borderRadius: '15px',
+    border: '2px solid #28a745',
+    boxShadow: '0 8px 20px rgba(0, 0, 0, 0.12)'
+  };
+
   const logoImgStyle = {
     width: '120px',
     height: '120px',
     borderRadius: '50%',
-    border: isDark ? '3px solid rgba(255,255,255,0.06)' : '4px solid #28a745',
+    border: '4px solid #28a745',
     marginBottom: '15px'
   };
 
@@ -117,9 +140,14 @@ const AcercaDeCBTa134 = ({ onBack }) => {
     <div style={containerStyle}>
       <BackButton onBack={onBack} />
       <div style={cardStyle}>
+        {aboutConfig?.croquis_image_url && (
+          <div style={croquisStyle}>
+            <img src={aboutConfig.croquis_image_url} alt="Croquis CBTa 134" style={croquisImgStyle} />
+          </div>
+        )}
         <div style={logoStyle}>
-          <img src="/images/cbta134.png" alt="Logo CBTa 134" style={logoImgStyle} />
-          <h1 style={titleStyle}>Acerca de CBTa 134</h1>
+          <img src={aboutConfig?.logo_url || "/images/cbta134.png"} alt="Logo CBTa 134" style={logoImgStyle} />
+          <h1 style={titleStyle}>{aboutConfig?.title || 'Acerca de CBTa 134'}</h1>
         </div>
 
         {/* Historia e Identidad Institucional */}
@@ -127,47 +155,30 @@ const AcercaDeCBTa134 = ({ onBack }) => {
           <h2 style={sectionTitleStyle}>🏛️ Historia e Identidad Institucional</h2>
           
           <div style={subsectionStyle}>
-            <h3 style={subsectionTitleStyle}>
-              📖 Nuestra Historia
-            </h3>
+            <h3 style={subsectionTitleStyle}>📖 Nuestra Historia</h3>
             <p style={textStyle}>
-              El Centro de Bachillerato Tecnológico Agropecuario No. 134 es una institución educativa 
-              que ha forjado su prestigio a través de décadas de excelencia académica. Fundado con el 
-              propósito de brindar educación técnica de calidad en el área agropecuaria, hemos evolucionado 
-              para convertirnos en un referente educativo que forma profesionales competentes y ciudadanos 
-              comprometidos con el desarrollo de nuestra comunidad.
+              {aboutConfig?.history_text || 'El Centro de Bachillerato Tecnológico Agropecuario No. 134 es una institución educativa que ha forjado su prestigio a través de décadas de excelencia académica. Fundado con el propósito de brindar educación técnica de calidad en el área agropecuaria, hemos evolucionado para convertirnos en un referente educativo que forma profesionales competentes y ciudadanos comprometidos con el desarrollo de nuestra comunidad.'}
             </p>
           </div>
 
           <div style={subsectionStyle}>
-            <h3 style={subsectionTitleStyle}>
-              🎯 Misión
-            </h3>
+            <h3 style={subsectionTitleStyle}>🎯 Misión</h3>
             <p style={textStyle}>
-              Contribuir activamente a la formación integral de nuestros estudiantes del Bachillerato 
-              Tecnológico con un enfoque de desarrollo sostenible y emprendedor que los integre plenamente 
-              a la sociedad, proporcionando herramientas académicas y técnicas que les permitan enfrentar 
-              los retos del mundo moderno con competencia y valores sólidos.
+              {aboutConfig?.mission_text || 'Contribuir activamente a la formación integral de nuestros estudiantes del Bachillerato Tecnológico, con un enfoque de desarrollo sostenible y emprendedor que los integre plenamente a la sociedad, proporcionando herramientas académicas y técnicas que les permitan enfrentar los retos del mundo moderno con competencia y valores sólidos.'}
             </p>
           </div>
 
           <div style={subsectionStyle}>
-            <h3 style={subsectionTitleStyle}>
-              🔭 Visión
-            </h3>
+            <h3 style={subsectionTitleStyle}>🔭 Visión</h3>
             <p style={textStyle}>
-              Ser una institución de calidad formadora de líderes del mañana, reconocida por su excelencia 
-              educativa, innovación tecnológica y compromiso con el desarrollo sustentable, que contribuya 
-              al progreso social y económico de la región.
+              {aboutConfig?.vision_text || 'Ser una institución de calidad, formadora de líderes del mañana, reconocida por su excelencia educativa, innovación tecnológica y compromiso con el desarrollo sustentable, que contribuya al progreso social y económico de la región.'}
             </p>
           </div>
 
           <div style={subsectionStyle}>
-            <h3 style={subsectionTitleStyle}>
-              💫 Lema Institucional
-            </h3>
-            <p style={{...textStyle, fontSize: '1.2rem', fontWeight: 'bold', color: isDark ? '#d0e6ff' : '#2c3e50', textAlign: 'center'}}>
-              "Formar e innovar para transformar"
+            <h3 style={subsectionTitleStyle}>💫 Lema Institucional</h3>
+            <p style={{...textStyle, fontSize: '1.2rem', fontWeight: 'bold', color: '#28a745', textAlign: 'center'}}>
+              {aboutConfig?.lema_text || '"Formar e innovar para transformar"'}
             </p>
           </div>
         </div>
@@ -177,83 +188,26 @@ const AcercaDeCBTa134 = ({ onBack }) => {
           <h2 style={sectionTitleStyle}>⭐ Nuestros Valores</h2>
           
           <div style={valoresGridStyle}>
-            <div style={valorStyle}>
-              <h3 style={{...subsectionTitleStyle, justifyContent: 'center'}}>
-                🌟 Excelencia Académica
-              </h3>
-              <p style={{...textStyle, textAlign: 'center', fontSize: '0.95rem'}}>
-                Búsqueda constante de la calidad en todos nuestros procesos educativos, 
-                promoviendo el aprendizaje continuo y la mejora permanente.
-              </p>
-            </div>
-
-            <div style={valorStyle}>
-              <h3 style={{...subsectionTitleStyle, justifyContent: 'center'}}>
-                🤝 Respeto
-              </h3>
-              <p style={{...textStyle, textAlign: 'center', fontSize: '0.95rem'}}>
-                Valoramos la dignidad de cada persona, promoviendo un ambiente de 
-                tolerancia, inclusión y reconocimiento mutuo.
-              </p>
-            </div>
-
-            <div style={valorStyle}>
-              <h3 style={{...subsectionTitleStyle, justifyContent: 'center'}}>
-                💼 Responsabilidad
-              </h3>
-              <p style={{...textStyle, textAlign: 'center', fontSize: '0.95rem'}}>
-                Asumimos nuestros compromisos con dedicación y ética, siendo 
-                conscientes del impacto de nuestras acciones en la sociedad.
-              </p>
-            </div>
-
-            <div style={valorStyle}>
-              <h3 style={{...subsectionTitleStyle, justifyContent: 'center'}}>
-                💎 Honestidad
-              </h3>
-              <p style={{...textStyle, textAlign: 'center', fontSize: '0.95rem'}}>
-                Actuamos con transparencia, integridad y sinceridad en todas 
-                nuestras relaciones y actividades institucionales.
-              </p>
-            </div>
-
-            <div style={valorStyle}>
-              <h3 style={{...subsectionTitleStyle, justifyContent: 'center'}}>
-                👥 Trabajo en Equipo
-              </h3>
-              <p style={{...textStyle, textAlign: 'center', fontSize: '0.95rem'}}>
-                Fomentamos la colaboración, comunicación efectiva y el apoyo 
-                mutuo para alcanzar objetivos comunes.
-              </p>
-            </div>
-
-            <div style={valorStyle}>
-              <h3 style={{...subsectionTitleStyle, justifyContent: 'center'}}>
-                🚀 Innovación
-              </h3>
-              <p style={{...textStyle, textAlign: 'center', fontSize: '0.95rem'}}>
-                Promovemos la creatividad, el pensamiento crítico y la adopción 
-                de nuevas tecnologías para mejorar continuamente.
-              </p>
-            </div>
+            {aboutValues.map((value) => (
+              <div key={value.id} style={valorStyle}>
+                <h3 style={{...subsectionTitleStyle, justifyContent: 'center'}}>{value.icon} {value.title}</h3>
+                <p style={{...textStyle, textAlign: 'center', fontSize: '0.95rem'}}>
+                  {value.description}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Compromiso Social */}
         <div style={sectionStyle}>
           <h2 style={sectionTitleStyle}>🌱 Nuestro Compromiso</h2>
-          
           <div style={subsectionStyle}>
             <p style={textStyle}>
-              El CBTa 134 se compromete a formar ciudadanos integrales que contribuyan al desarrollo 
-              sustentable de su comunidad. Nuestro enfoque educativo combina la excelencia académica 
-              con la formación en valores, preparando a nuestros estudiantes para ser agentes de 
-              cambio positivo en la sociedad.
+              {aboutConfig?.commitment_text_1 || 'El CBTa 134 se compromete a formar ciudadanos integrales que contribuyan al desarrollo sustentable de su comunidad. Nuestro enfoque educativo combina la excelencia académica con la formación en valores, preparando a nuestros estudiantes para ser agentes de cambio positivo en la sociedad.'}
             </p>
             <p style={textStyle}>
-              A través de nuestros programas técnicos especializados, fomentamos el emprendimiento, 
-              la innovación tecnológica y el cuidado del medio ambiente, formando profesionales 
-              competentes que respondan a las necesidades del mercado laboral actual.
+              {aboutConfig?.commitment_text_2 || 'A través de nuestros programas técnicos especializados, fomentamos el emprendimiento, la innovación tecnológica y el cuidado del medio ambiente, formando profesionales competentes que respondan a las necesidades del mercado laboral actual.'}
             </p>
           </div>
         </div>

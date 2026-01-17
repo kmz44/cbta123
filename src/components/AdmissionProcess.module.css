@@ -1,329 +1,285 @@
-/* components/AdmissionProcess.module.css */
+/* components/AdmissionProcess.module.css
+   Versión: Tema Verde (sin modo oscuro)
+   Mantiene estructura y clases originales, sólo se adaptan colores a verdes.
+*/
+
+/* ---------------------------
+   Reset / contenedor principal
+   --------------------------- */
 .admissionProcess {
-    font-family: 'Segoe UI', 'Arial', sans-serif;
-    background-color: #f0f2f5;
-    color: #333;
-    padding-top: 80px;
-    min-height: 100vh;
-  }
-  
-  .header {
-    background: linear-gradient(135deg, #4CAF50, #2196F3);
-    color: white;
-    text-align: center;
-    padding: 3rem;
-    border-radius: 0 0 30px 30px;
-    margin-bottom: 2rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  }
-  
-  .welcomeText {
-    font-size: 1.2rem;
-    margin-top: 1rem;
-    animation: bounce 2s infinite;
-  }
-  
-  @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-  }
-  
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1rem;
-  }
-  
-  .countdownContainer {
-    background: linear-gradient(135deg, #FF9800, #FF5722);
-    color: white;
-    text-align: center;
-    padding: 2rem;
-    border-radius: 20px;
-    margin: 2rem 0;
-  }
-  
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+  background-color: #eff7ef; /* fondo suave verdoso */
+  color: #233029;            /* texto principal oscuro */
+  padding-top: 80px;
+  min-height: 100vh;
+}
+
+/* ---------------------------
+   Header principal
+   --------------------------- */
+.header {
+  /* gradiente verde */
+  background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+  color: white;
+  text-align: center;
+  padding: 3rem;
+  border-radius: 0 0 30px 30px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+/* Texto de bienvenida animado */
+.welcomeText {
+  font-size: 1.2rem;
+  margin-top: 1rem;
+  animation: bounce 2s infinite;
+}
+
+/* Animación bounce */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* ---------------------------
+   Contenedor central
+   --------------------------- */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* ---------------------------
+   Contador / countdown
+   --------------------------- */
+.countdownContainer {
+  background: linear-gradient(135deg, #66bb6a, #2e7d32); /* verde - CTA */
+  color: white;
+  text-align: center;
+  padding: 2rem;
+  border-radius: 20px;
+  margin: 2rem 0;
+}
+
+.countdown {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.countdownItem {
+  background: rgba(255, 255, 255, 0.18);
+  padding: 1rem;
+  border-radius: 15px;
+  min-width: 100px;
+  backdrop-filter: blur(4px);
+  text-align: center;
+}
+
+.countdownItem span {
+  font-size: 2rem;
+  font-weight: bold;
+  color: white;
+}
+
+/* ---------------------------
+   Tarjetas / cards
+   --------------------------- */
+.card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 2rem;
+  margin: 1.5rem 0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(46,125,50,0.12);
+}
+
+/* Icono / título con emoji */
+.emojiTitle {
+  color: #2e7d32; /* verde oscuro */
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ---------------------------
+   Fechas grid
+   --------------------------- */
+.fechasGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.fechaCard {
+  background: #f8fbf8;
+  padding: 1.5rem;
+  border-radius: 15px;
+  border-left: 5px solid #66bb6a; /* indicador verde */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.fechaCard:hover {
+  transform: translateX(8px);
+  box-shadow: 0 8px 18px rgba(46,125,50,0.08);
+}
+
+/* ---------------------------
+   Lista de requisitos
+   --------------------------- */
+.requisitosList {
+  list-style: none;
+  padding-left: 0;
+}
+
+.requisitosList li {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: #f8fbf8;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.requisitosList li:hover {
+  transform: translateX(8px);
+  background: #e8f7e9;
+}
+
+.requisitosList li::before {
+  content: "✅";
+  margin-right: 1rem;
+  font-size: 1.2rem;
+  color: #2e7d32; /* check verde */
+}
+
+/* ---------------------------
+   Especialidades (grid)
+   --------------------------- */
+.especialidadesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.especialidadCard {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.especialidadCard:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 12px 30px rgba(46,125,50,0.10);
+}
+
+.emojiIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: #2e7d32;
+}
+
+/* ---------------------------
+   Información de contacto
+   --------------------------- */
+.contactoInfo {
+  padding: 1rem;
+  background: #f8fbf8;
+  border-radius: 15px;
+  border-left: 5px solid #66bb6a;
+}
+
+.contactoInfo a {
+  color: #2e7d32;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.contactoInfo a:hover {
+  text-decoration: underline;
+}
+
+/* ---------------------------
+   Botón regresar
+   --------------------------- */
+.backButton {
+  background: linear-gradient(135deg, #66bb6a, #2e7d32);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 2rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.backButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(46,125,50,0.12);
+}
+
+/* ---------------------------
+   Responsive
+   --------------------------- */
+@media (max-width: 768px) {
   .countdown {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    margin-top: 1.5rem;
-    flex-wrap: wrap;
-  }
-  
-  .countdownItem {
-    background: rgba(255, 255, 255, 0.2);
-    padding: 1rem;
-    border-radius: 15px;
-    min-width: 100px;
-    backdrop-filter: blur(5px);
-  }
-  
-  .countdownItem span {
-    font-size: 2rem;
-    font-weight: bold;
-  }
-  
-  .card {
-    background: white;
-    border-radius: 20px;
-    padding: 2rem;
-    margin: 1.5rem 0;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-  }
-  
-  .card:hover {
-    transform: translateY(-5px);
-  }
-  
-  .emojiTitle {
-    color: #1976D2;
-    margin-bottom: 1.5rem;
-    font-size: 1.8rem;
-    display: flex;
-    align-items: center;
     gap: 0.5rem;
   }
-  
-  .fechasGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1rem;
-  }
-  
-  .fechaCard {
-    background: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 15px;
-    border-left: 5px solid #2196F3;
-    transition: transform 0.3s ease;
-  }
-  
-  .fechaCard:hover {
-    transform: translateX(10px);
-  }
-  
-  .requisitosList {
-    list-style: none;
-  }
-  
-  .requisitosList li {
-    margin: 1rem 0;
-    padding: 1rem;
-    background: #f8f9fa;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    transition: transform 0.3s ease;
-  }
-  
-  .requisitosList li:hover {
-    transform: translateX(10px);
-    background: #e3f2fd;
-  }
-  
-  .requisitosList li::before {
-    content: "✅";
-    margin-right: 1rem;
-    font-size: 1.2rem;
-  }
-  
-  .especialidadesGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-  }
-  
-  .especialidadCard {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 15px;
-    text-align: center;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-  }
-  
-  .especialidadCard:hover {
-    transform: translateY(-10px);
-  }
-  
-  .emojiIcon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-  }
-  
-  .contactoInfo {
-    padding: 1rem;
-    background: #f8f9fa;
-    border-radius: 15px;
-    border-left: 5px solid #2196F3;
-  }
-  
-  .contactoInfo a {
-    color: #1976D2;
-    text-decoration: none;
-    font-weight: bold;
-  }
-  
-  .contactoInfo a:hover {
-    text-decoration: underline;
-  }
-  
-  .backButton {
-    background: #2196F3;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 2rem;
-  }
-  
-  .backButton:hover {
-    background: #1976D2;
-  }
-  
-  @media (max-width: 768px) {
-    .countdown {
-      gap: 0.5rem;
-    }
-  
-    .countdownItem {
-      min-width: 80px;
-    }
+
+  .countdownItem {
+    min-width: 80px;
   }
 
-  /* Overrides para modo oscuro (body.dark-mode) */
-  body.dark-mode .admissionProcess {
-    background-color: #07111a !important;
-    color: #d6dbe3 !important;
-  }
+  .hero, .header { padding: 2rem; }
 
-  /* Forzar fondo oscuro en todos los elementos card */
-  body.dark-mode .admissionProcess > div > div[class*="card"] {
-    background: rgba(255,255,255,0.03) !important;
-    color: #d0d7de !important;
-  }
+  .fechasGrid { gap: 1rem; }
 
-  body.dark-mode .admissionProcess .header {
-    background: linear-gradient(135deg, rgba(79, 182, 74, 0.12), rgba(33, 150, 243, 0.12));
-    box-shadow: 0 6px 18px rgba(2,6,23,0.6);
-  }
+  .especialidadesGrid { gap: 1rem; }
+}
 
-  body.dark-mode .admissionProcess .countdownContainer {
-    background: linear-gradient(135deg, rgba(255,152,0,0.08), rgba(255,87,34,0.06));
-    color: #f1f5f9;
-  }
+/* ---------------------------
+   Utilidades y overrides limpias
+   --------------------------- */
+/* Asegura que elementos con fondo blanco se vean bien sobre el fondo verde suave */
+.card,
+.especialidadCard,
+.fechaCard,
+.requisitosList li {
+  background: #ffffff;
+  color: #233029;
+}
 
-  body.dark-mode .admissionProcess .countdownItem {
-    background: rgba(255,255,255,0.03);
-  }
+/* Bordes suaves */
+.card,
+.fechaCard,
+.especialidadCard,
+.contactoInfo {
+  border: 1px solid rgba(46,125,50,0.06);
+}
 
-  body.dark-mode .admissionProcess .card,
-  body.dark-mode .admissionProcess .especialidadCard,
-  body.dark-mode .admissionProcess .fechaCard,
-  body.dark-mode .admissionProcess .requisitosList li {
-    background: rgba(255,255,255,0.03) !important;
-    box-shadow: 0 10px 30px rgba(2,6,23,0.6) !important;
-    color: #d0d7de !important;
-  }
+/* Sombras coherentes */
+.card,
+.especialidadCard,
+.fechaCard {
+  box-shadow: 0 6px 18px rgba(46,125,50,0.06);
+}
 
-  body.dark-mode .admissionProcess .emojiTitle {
-    color: #93c5fd;
-  }
-
-  body.dark-mode .admissionProcess .contactoInfo {
-    background: rgba(255,255,255,0.02);
-    border-left-color: rgba(33,150,243,0.25);
-  }
-
-  body.dark-mode .admissionProcess a {
-    color: #93c5fd;
-  }
-
-  /* Reglas específicas adicionales para elementos blancos */
-  
-  /* Selectores agresivos para capturar todos los elementos card */
-  body.dark-mode .admissionProcess div[class*="card"],
-  body.dark-mode .admissionProcess div[class*="Card"],
-  body.dark-mode .admissionProcess .card,
-  body.dark-mode .admissionProcess .fechaCard,
-  body.dark-mode .admissionProcess .especialidadCard {
-    background: rgba(255,255,255,0.03) !important;
-    background-color: rgba(255,255,255,0.03) !important;
-    color: #d0d7de !important;
-    box-shadow: 0 10px 30px rgba(2,6,23,0.6) !important;
-  }
-
-  /* Texto específico en cards */
-  body.dark-mode .admissionProcess div[class*="card"] h3,
-  body.dark-mode .admissionProcess div[class*="Card"] h3,
-  body.dark-mode .admissionProcess .fechaCard h3,
-  body.dark-mode .admissionProcess .especialidadCard h3 {
-    color: #93c5fd !important;
-  }
-
-  body.dark-mode .admissionProcess div[class*="card"] p,
-  body.dark-mode .admissionProcess div[class*="Card"] p,
-  body.dark-mode .admissionProcess .fechaCard p,
-  body.dark-mode .admissionProcess .especialidadCard p {
-    color: #bfc7cf !important;
-  }
-  body.dark-mode .admissionProcess .fechaCard {
-    background: rgba(255,255,255,0.03) !important;
-    color: #d0d7de !important;
-  }
-
-  body.dark-mode .admissionProcess .fechaCard h3 {
-    color: #93c5fd !important;
-  }
-
-  body.dark-mode .admissionProcess .fechaCard p {
-    color: #bfc7cf !important;
-  }
-
-  body.dark-mode .admissionProcess .especialidadCard {
-    background: rgba(255,255,255,0.03) !important;
-    color: #d0d7de !important;
-  }
-
-  body.dark-mode .admissionProcess .especialidadCard h3 {
-    color: #e6eef8 !important;
-  }
-
-  body.dark-mode .admissionProcess .especialidadCard p {
-    color: #bfc7cf !important;
-  }
-
-  body.dark-mode .admissionProcess .requisitosList li {
-    background: rgba(255,255,255,0.02) !important;
-    color: #d0d7de !important;
-  }
-
-  body.dark-mode .admissionProcess .requisitosList li:hover {
-    background: rgba(255,255,255,0.04) !important;
-  }
-
-  /* Capturar cualquier elemento con fondo blanco */
-  body.dark-mode .admissionProcess *[style*="background: white"],
-  body.dark-mode .admissionProcess *[style*="background-color: white"],
-  body.dark-mode .admissionProcess *[style*="background:#ffffff"],
-  body.dark-mode .admissionProcess *[style*="background-color:#ffffff"] {
-    background: rgba(255,255,255,0.03) !important;
-    background-color: rgba(255,255,255,0.03) !important;
-    color: #d0d7de !important;
-  }
-
-  /* Reglas adicionales para la clase dark-mode-content */
-  .dark-mode-content .card,
-  .dark-mode-content .fechaCard,
-  .dark-mode-content .especialidadCard,
-  .dark-mode-content div[class*="card"],
-  .dark-mode-content div[class*="Card"] {
-    background: rgba(255,255,255,0.03) !important;
-    background-color: rgba(255,255,255,0.03) !important;
-    color: #d0d7de !important;
-    box-shadow: 0 10px 30px rgba(2,6,23,0.6) !important;
-  }
+/* Pequeñas animaciones para accesibilidad */
+a, button {
+  transition: color 0.15s ease, background 0.15s ease, transform 0.12s ease;
+}

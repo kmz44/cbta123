@@ -1,27 +1,42 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
 
 
 const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [slides, setSlides] = useState([
+    '/images/camaleon.jpg',
+    '/images/campus.png'
+  ]);
 
-  const images = [
-    '/images/camaleon.jpg', // Ruta de la primera imagen
-    '/images/campus.png',   // Ruta de la segunda imagen
-  ];
+  useEffect(() => {
+    const fetchSlides = async () => {
+      const { data } = await supabase
+        .from('hero_slides')
+        .select('*')
+        .order('order_index', { ascending: true });
+
+      if (data && data.length > 0) {
+        setSlides(data.map((s) => s.image_url));
+      }
+    };
+
+    fetchSlides();
+  }, []);
 
   // Cambia automáticamente las imágenes cada 5 segundos
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentSlide((prevSlide) => (prevSlide + 1) % images.length);
+      setCurrentSlide((prevSlide) => (prevSlide + 1) % slides.length);
     }, 5000);
 
     return () => clearInterval(interval); // Limpia el intervalo al desmontar el componente
-  }, [images.length]);
+  }, [slides.length]);
 
   return (
     <section className="hero-section">
       <div className="slides-container">
-        {images.map((image, index) => (
+        {slides.map((image, index) => (
           <div
             key={index}
             className={`slide ${index === currentSlide ? 'active' : ''}`}
@@ -30,7 +45,7 @@ const HeroSection = () => {
         ))}
       </div>
       <div className="slides-controls">
-        {images.map((_, index) => (
+        {slides.map((_, index) => (
           <button
             key={index}
             className={`slide-indicator ${index === currentSlide ? 'active' : ''}`}

@@ -1,16 +1,28 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 
 const Navbar = ({ setCurrentView, setMenuOpen: setParentMenuOpen }) => {
+  const navigate = useNavigate();
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [submenuOpen, setSubmenuOpen] = useState(false);
 
   const handleNavClick = (view) => {
-    setCurrentView(view);
+    if (view === 'alumnos') {
+      navigate('/alumnos');
+    } else if (view === 'maestros') {
+      navigate('/maestros');
+    } else {
+      setCurrentView(view);
+      navigate('/');
+    }
     setMenuOpen(false);
     if (setParentMenuOpen) {
       setParentMenuOpen(false);
     }
   };
+
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
@@ -132,13 +144,13 @@ const Navbar = ({ setCurrentView, setMenuOpen: setParentMenuOpen }) => {
   };
 
   const submenuItemStyle = {
-    ...linkStyle, 
-    background: 'none', 
-    border: 'none', 
-    width: '100%', 
-    textAlign: 'left', 
-    color: '#333', 
-    paddingLeft: '30px', 
+    ...linkStyle,
+    background: 'none',
+    border: 'none',
+    width: '100%',
+    textAlign: 'left',
+    color: '#333',
+    paddingLeft: '30px',
     fontSize: '15px',
     fontWeight: '500',
     padding: '12px 30px',
@@ -161,8 +173,8 @@ const Navbar = ({ setCurrentView, setMenuOpen: setParentMenuOpen }) => {
       <nav style={menuStyle}>
         <ul style={ulStyle}>
           <li style={liStyle}>
-            <button 
-              style={{...linkStyle, background: 'none', border: 'none', width: '100%', textAlign: 'left', color: '#333'}}
+            <button
+              style={{ ...linkStyle, background: 'none', border: 'none', width: '100%', textAlign: 'left', color: '#333' }}
               onClick={() => handleNavClick('home')}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.02)' : '#f8f9fa'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -171,8 +183,8 @@ const Navbar = ({ setCurrentView, setMenuOpen: setParentMenuOpen }) => {
             </button>
           </li>
           <li style={liStyle}>
-            <button 
-              style={{...linkStyle, background: 'none', border: 'none', width: '100%', textAlign: 'left', color: '#333'}}
+            <button
+              style={{ ...linkStyle, background: 'none', border: 'none', width: '100%', textAlign: 'left', color: '#333' }}
               onClick={() => handleNavClick('acerca')}
               onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
               onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
@@ -181,8 +193,8 @@ const Navbar = ({ setCurrentView, setMenuOpen: setParentMenuOpen }) => {
             </button>
           </li>
           <li style={liStyle}>
-            <button 
-              style={{...linkStyle, background: 'none', border: 'none', width: '100%', textAlign: 'left', color: '#333'}}
+            <button
+              style={{ ...linkStyle, background: 'none', border: 'none', width: '100%', textAlign: 'left', color: '#333' }}
               onClick={() => handleNavClick('noticias')}
               onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
               onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
@@ -190,17 +202,17 @@ const Navbar = ({ setCurrentView, setMenuOpen: setParentMenuOpen }) => {
               📰 Noticias
             </button>
           </li>
-          <li style={{...liStyle, ...submenuStyle}}>
-            <button 
-              style={{...submenuToggleStyle, color: '#ffffff', fontSize: '16px', fontWeight: 'bold'}} 
+          <li style={{ ...liStyle, ...submenuStyle }}>
+            <button
+              style={{ ...submenuToggleStyle, color: '#ffffff', fontSize: '16px', fontWeight: 'bold' }}
               onClick={toggleSubmenu}
             >
               Carreras ▾
             </button>
             {submenuOpen && (
-              <ul style={{...ulStyle, ...submenuItemsStyle}}>
-                <li style={{...liStyle, borderBottom: '1px solid #f0f0f0'}}>
-                  <button 
+              <ul style={{ ...ulStyle, ...submenuItemsStyle }}>
+                <li style={{ ...liStyle, borderBottom: '1px solid #f0f0f0' }}>
+                  <button
                     style={submenuItemStyle}
                     onClick={() => handleNavClick('agropecuario')}
                     onMouseEnter={(e) => {
@@ -217,8 +229,8 @@ const Navbar = ({ setCurrentView, setMenuOpen: setParentMenuOpen }) => {
                     🌾 Agropecuario
                   </button>
                 </li>
-                <li style={{...liStyle, borderBottom: '1px solid #f0f0f0'}}>
-                  <button 
+                <li style={{ ...liStyle, borderBottom: '1px solid #f0f0f0' }}>
+                  <button
                     style={submenuItemStyle}
                     onClick={() => handleNavClick('spp')}
                     onMouseEnter={(e) => {
@@ -235,8 +247,8 @@ const Navbar = ({ setCurrentView, setMenuOpen: setParentMenuOpen }) => {
                     ⚙️ SPP
                   </button>
                 </li>
-                <li style={{...liStyle, borderBottom: '1px solid #f0f0f0'}}>
-                  <button 
+                <li style={{ ...liStyle, borderBottom: '1px solid #f0f0f0' }}>
+                  <button
                     style={submenuItemStyle}
                     onClick={() => handleNavClick('ofimatica')}
                     onMouseEnter={(e) => {
@@ -253,8 +265,8 @@ const Navbar = ({ setCurrentView, setMenuOpen: setParentMenuOpen }) => {
                     💻 Ofimática
                   </button>
                 </li>
-                <li style={{...liStyle, borderBottom: '1px solid #f0f0f0'}}>
-                  <button 
+                <li style={{ ...liStyle, borderBottom: '1px solid #f0f0f0' }}>
+                  <button
                     style={submenuItemStyle}
                     onClick={() => handleNavClick('programacion')}
                     onMouseEnter={(e) => {
@@ -271,8 +283,8 @@ const Navbar = ({ setCurrentView, setMenuOpen: setParentMenuOpen }) => {
                     💻 Programación
                   </button>
                 </li>
-                <li style={{...liStyle, borderBottom: 'none'}}>
-                  <button 
+                <li style={{ ...liStyle, borderBottom: 'none' }}>
+                  <button
                     style={submenuItemStyle}
                     onClick={() => handleNavClick('contabilidad')}
                     onMouseEnter={(e) => {
@@ -293,8 +305,8 @@ const Navbar = ({ setCurrentView, setMenuOpen: setParentMenuOpen }) => {
             )}
           </li>
           <li style={liStyle}>
-            <button 
-              style={{...linkStyle, background: 'none', border: 'none', width: '100%', textAlign: 'left', color: '#333'}}
+            <button
+              style={{ ...linkStyle, background: 'none', border: 'none', width: '100%', textAlign: 'left', color: '#333' }}
               onClick={() => handleNavClick('clubs')}
               onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
               onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
@@ -303,8 +315,8 @@ const Navbar = ({ setCurrentView, setMenuOpen: setParentMenuOpen }) => {
             </button>
           </li>
           <li style={liStyle}>
-            <button 
-              style={{...linkStyle, background: 'none', border: 'none', width: '100%', textAlign: 'left', color: '#333'}}
+            <button
+              style={{ ...linkStyle, background: 'none', border: 'none', width: '100%', textAlign: 'left', color: '#333' }}
               onClick={() => handleNavClick('galeria')}
               onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
               onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
@@ -313,8 +325,8 @@ const Navbar = ({ setCurrentView, setMenuOpen: setParentMenuOpen }) => {
             </button>
           </li>
           <li style={liStyle}>
-            <button 
-              style={{...linkStyle, background: 'none', border: 'none', width: '100%', textAlign: 'left', color: '#333'}}
+            <button
+              style={{ ...linkStyle, background: 'none', border: 'none', width: '100%', textAlign: 'left', color: '#333' }}
               onClick={() => handleNavClick('saetam')}
               onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
               onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
@@ -323,8 +335,8 @@ const Navbar = ({ setCurrentView, setMenuOpen: setParentMenuOpen }) => {
             </button>
           </li>
           <li style={liStyle}>
-            <button 
-              style={{...linkStyle, background: 'none', border: 'none', width: '100%', textAlign: 'left', color: '#333'}}
+            <button
+              style={{ ...linkStyle, background: 'none', border: 'none', width: '100%', textAlign: 'left', color: '#333' }}
               onClick={() => handleNavClick('admission')}
               onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
               onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
@@ -334,8 +346,8 @@ const Navbar = ({ setCurrentView, setMenuOpen: setParentMenuOpen }) => {
           </li>
 
           <li style={liStyle}>
-            <button 
-              style={{...linkStyle, background: 'none', border: 'none', width: '100%', textAlign: 'left', color: '#333'}}
+            <button
+              style={{ ...linkStyle, background: 'none', border: 'none', width: '100%', textAlign: 'left', color: '#333' }}
               onClick={() => handleNavClick('maestros')}
               onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
               onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
@@ -344,8 +356,18 @@ const Navbar = ({ setCurrentView, setMenuOpen: setParentMenuOpen }) => {
             </button>
           </li>
           <li style={liStyle}>
-            <button 
-              style={{...linkStyle, background: 'none', border: 'none', width: '100%', textAlign: 'left', color: '#333'}}
+            <button
+              style={{ ...linkStyle, background: 'none', border: 'none', width: '100%', textAlign: 'left', color: '#333' }}
+              onClick={() => handleNavClick('alumnos')}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+            >
+              🎓 Alumnos
+            </button>
+          </li>
+          <li style={liStyle}>
+            <button
+              style={{ ...linkStyle, background: 'none', border: 'none', width: '100%', textAlign: 'left', color: '#333' }}
               onClick={() => handleNavClick('contacto')}
               onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
               onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}

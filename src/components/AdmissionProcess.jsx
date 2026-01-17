@@ -1,9 +1,16 @@
 import React, { useEffect, useState } from "react";
 import BackButton from "./BackButton";
 import styles from "./AdmissionProcess.module.css";
+import { supabase } from "../lib/supabaseClient";
 
 const AdmissionProcess = ({ onBack }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [admissionConfig, setAdmissionConfig] = useState(null);
+  const [admissionDates, setAdmissionDates] = useState([]);
+  const [admissionRequirements, setAdmissionRequirements] = useState([]);
+  const [admissionSpecialties, setAdmissionSpecialties] = useState([]);
+  const [admissionContact, setAdmissionContact] = useState(null);
   const [admissionTimeLeft, setAdmissionTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -29,7 +36,8 @@ const AdmissionProcess = ({ onBack }) => {
 
   useEffect(() => {
     const calculateAdmissionTimeLeft = () => {
-      const targetDate = new Date('2026-04-01T00:00:00');
+      const targetDateValue = admissionConfig?.target_date || '2026-04-01T00:00:00';
+      const targetDate = new Date(targetDateValue);
       const now = new Date();
       const difference = targetDate - now;
 
@@ -48,6 +56,49 @@ const AdmissionProcess = ({ onBack }) => {
     calculateAdmissionTimeLeft();
     const timer = setInterval(calculateAdmissionTimeLeft, 1000);
     return () => clearInterval(timer);
+  }, [admissionConfig]);
+
+  useEffect(() => {
+    const fetchAdmissionData = async () => {
+      setLoading(true);
+      const { data: configData } = await supabase
+        .from('admission_config')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      const { data: datesData } = await supabase
+        .from('admission_dates')
+        .select('*')
+        .order('order_index', { ascending: true });
+
+      const { data: requirementsData } = await supabase
+        .from('admission_requirements')
+        .select('*')
+        .order('order_index', { ascending: true });
+
+      const { data: specialtiesData } = await supabase
+        .from('admission_specialties')
+        .select('*')
+        .order('order_index', { ascending: true });
+
+      const { data: contactData } = await supabase
+        .from('admission_contact')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      setAdmissionConfig(configData || null);
+      setAdmissionDates(datesData || []);
+      setAdmissionRequirements(requirementsData || []);
+      setAdmissionSpecialties(specialtiesData || []);
+      setAdmissionContact(contactData || null);
+      setLoading(false);
+    };
+
+    fetchAdmissionData();
   }, []);
 
   const containerStyle = {
@@ -83,9 +134,9 @@ const AdmissionProcess = ({ onBack }) => {
       style: containerStyle 
     },
     React.createElement('header', { className: styles.header },
-      React.createElement('h1', null, '¡Bienvenido al CBTA 134! 🎓'),
+      React.createElement('h1', null, admissionConfig?.header_title || '¡Bienvenido al CBTA 134! 🎓'),
       React.createElement('p', { className: styles.welcomeText }, 
-        'Tu futuro comienza aquí en San Francisco Tetlanohcan'
+        admissionConfig?.header_subtitle || 'Tu futuro comienza aquí en San Francisco Tetlanohcan'
       )
     ),
     React.createElement('div', { className: styles.container },
@@ -110,102 +161,68 @@ const AdmissionProcess = ({ onBack }) => {
           )
         ),
         React.createElement('div', { className: styles.countdownMessage },
-          '¡Procesos de admisión inician el 1 de abril de 2026!'
+          admissionConfig?.countdown_message || '¡Procesos de admisión inician el 1 de abril de 2026!'
         )
       ),
       React.createElement('div', { className: styles.card, style: cardStyle },
         React.createElement('h2', { className: styles.emojiTitle }, '📅 ¡Fechas Importantes!'),
         React.createElement('div', { className: styles.fechasGrid },
-          React.createElement('div', { className: styles.fechaCard, style: fechaCardStyle },
-            React.createElement('h3', null, '📝 Registro'),
-            React.createElement('p', null, '1 marzo - 30 abril 2026'),
-            React.createElement('p', null, '¡No te quedes fuera!')
-          ),
-          React.createElement('div', { className: styles.fechaCard, style: fechaCardStyle },
-            React.createElement('h3', null, '📚 Examen'),
-            React.createElement('p', null, '15 de junio 2026'),
-            React.createElement('p', null, '¡Prepárate para brillar!')
-          ),
-          React.createElement('div', { className: styles.fechaCard, style: fechaCardStyle },
-            React.createElement('h3', null, '🎉 Resultados'),
-            React.createElement('p', null, '30 de junio 2026'),
-            React.createElement('p', null, '¡El gran día!')
-          ),
-          React.createElement('div', { className: styles.fechaCard, style: fechaCardStyle },
-            React.createElement('h3', null, '✍️ Inscripciones'),
-            React.createElement('p', null, '1 - 15 julio 2026'),
-            React.createElement('p', null, '¡Tu nueva aventura!')
-          )
+          (admissionDates.length > 0 ? admissionDates : []).map((item) => (
+            React.createElement('div', { key: item.id, className: styles.fechaCard, style: fechaCardStyle },
+              React.createElement('h3', null, item.title),
+              React.createElement('p', null, item.date_range),
+              React.createElement('p', null, item.subtitle)
+            )
+          ))
         )
       ),
       React.createElement('div', { className: styles.card, style: cardStyle },
         React.createElement('h2', { className: styles.emojiTitle }, '📋 ¿Qué necesitas traer?'),
         React.createElement('ul', { className: styles.requisitosList },
-          React.createElement('li', { style: listItemStyle }, 'Tu certificado de secundaria o constancia'),
-          React.createElement('li', { style: listItemStyle }, 'Acta de nacimiento'),
-          React.createElement('li', { style: listItemStyle }, 'CURP actualizada'),
-          React.createElement('li', { style: listItemStyle }, '2 fotos tamaño infantil'),
-          React.createElement('li', { style: listItemStyle }, 'Comprobante de donde vives'),
-          React.createElement('li', { style: listItemStyle }, 'Pago de registro')
+          (admissionRequirements.length > 0 ? admissionRequirements : []).map((item) => (
+            React.createElement('li', { key: item.id, style: listItemStyle }, item.requirement)
+          ))
         )
       ),
       React.createElement('div', { className: styles.card, style: cardStyle },
         React.createElement('h2', { className: styles.emojiTitle }, '🌟 ¡Elige tu camino!'),
         React.createElement('div', { className: styles.especialidadesGrid },
-          React.createElement('div', { className: styles.especialidadCard, style: especialidadCardStyle },
-            React.createElement('div', { className: styles.emojiIcon }, '🌱'),
-            React.createElement('h3', null, 'Técnico Agropecuario'),
-            React.createElement('p', null, '¡Aprende sobre agricultura y ganadería!')
-          ),
-          React.createElement('div', { className: styles.especialidadCard, style: especialidadCardStyle },
-            React.createElement('div', { className: styles.emojiIcon }, '🐄'),
-            React.createElement('h3', null, 'Técnico en Sistemas de Producción Pecuaria'),
-            React.createElement('p', null, '¡Especialízate en producción animal!')
-          ),
-          React.createElement('div', { className: styles.especialidadCard, style: especialidadCardStyle },
-            React.createElement('div', { className: styles.emojiIcon }, '💼'),
-            React.createElement('h3', null, 'Técnico en Contabilidad'),
-            React.createElement('p', null, '¡Conviértete en un experto en finanzas!')
-          ),
-          React.createElement('div', { className: styles.especialidadCard, style: especialidadCardStyle },
-            React.createElement('div', { className: styles.emojiIcon }, '💻'),
-            React.createElement('h3', null, 'Técnico en Ofimática'),
-            React.createElement('p', null, '¡Domina herramientas de oficina y gestión!')
-          ),
-          React.createElement('div', { className: styles.especialidadCard, style: especialidadCardStyle },
-            React.createElement('div', { className: styles.emojiIcon }, '🖥️'),
-            React.createElement('h3', null, 'Técnico en Programación'),
-            React.createElement('p', null, '¡Desarrolla software y aplicaciones!')
-          )
+          (admissionSpecialties.length > 0 ? admissionSpecialties : []).map((item) => (
+            React.createElement('div', { key: item.id, className: styles.especialidadCard, style: especialidadCardStyle },
+              React.createElement('div', { className: styles.emojiIcon }, item.emoji),
+              React.createElement('h3', null, item.name),
+              React.createElement('p', null, item.description)
+            )
+          ))
         )
       ),
       React.createElement('div', { className: styles.card, style: cardStyle },
         React.createElement('h2', { className: styles.emojiTitle }, '📞 ¡Contáctanos!'),
         React.createElement('div', { className: styles.contactoInfo },
-          React.createElement('p', null, '📍 Dirección: CARRETERA TETLANOHCAN A MALINTZIN KILÓMETRO NUM. 3, San Francisco, México, 90800'),
-          React.createElement('p', null, '📞 Teléfono: ',
+          React.createElement('p', null, `📍 Dirección: ${admissionContact?.address || 'CARRETERA TETLANOHCAN A MALINTZIN KILÓMETRO NUM. 3, San Francisco, México, 90800'}`),
+          React.createElement('p', null, `${admissionContact?.phone_label || '📞 Teléfono'}: `,
             React.createElement('a', { 
-              href: 'tel:+522464623456', 
+              href: admissionContact?.phone_value ? `tel:${admissionContact.phone_value.replace(/\s/g, '')}` : 'tel:+522464623456', 
               style: { color: isDarkMode ? '#93c5fd' : '#3498db', textDecoration: 'none' }
-            }, '01 (246) 46 2 34 56')
+            }, admissionContact?.phone_value || '01 (246) 46 2 34 56')
           ),
-          React.createElement('p', null, '📧 Correo: ',
+          React.createElement('p', null, `${admissionContact?.email_label || '📧 Correo'}: `,
             React.createElement('a', { 
-              href: 'mailto:cbta134@yahoo.com.mx', 
+              href: admissionContact?.email_value ? `mailto:${admissionContact.email_value}` : 'mailto:cbta134@yahoo.com.mx', 
               target: '_blank',
               rel: 'noopener noreferrer',
               style: { color: isDarkMode ? '#93c5fd' : '#3498db', textDecoration: 'none' }
-            }, 'cbta134@yahoo.com.mx')
+            }, admissionContact?.email_value || 'cbta134@yahoo.com.mx')
           ),
-          React.createElement('p', null, '🌐 Sitio Web: ',
+          React.createElement('p', null, `${admissionContact?.website_label || '🌐 Sitio Web'}: `,
             React.createElement('a', { 
-              href: 'http://www.cbta134.edu.mx/', 
+              href: admissionContact?.website_value || 'http://www.cbta134.edu.mx/', 
               target: '_blank',
               rel: 'noopener noreferrer',
               style: { color: isDarkMode ? '#93c5fd' : '#3498db', textDecoration: 'none' }
-            }, 'www.cbta134.edu.mx')
+            }, admissionContact?.website_value || 'www.cbta134.edu.mx')
           ),
-          React.createElement('p', null, '🕒 Horario: Lunes a Viernes 7:00 AM - 4:00 PM, Sábados 8:00 AM - 12:00 PM')
+          React.createElement('p', null, admissionContact?.schedule || '🕒 Horario: Lunes a Viernes 7:00 AM - 4:00 PM, Sábados 8:00 AM - 12:00 PM')
         )
       )
     ),

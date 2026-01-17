@@ -18,7 +18,8 @@
   .chatbot-bubble {
     width: 60px;
     height: 60px;
-    background-color: #4caf50; /* Cambia el color a verde para combinar con el camaleón */
+      background-color: #ffffff; /* Fondo blanco para que no choque con la imagen */
+      border: 2px solid #4caf50; /* Aro verde */
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -29,22 +30,29 @@
   }
   
   .chatbot-bubble:hover {
-    background-color: #45a049; /* Color más oscuro al hacer hover */
+      background-color: #f3fff4; /* Suave al hacer hover */
   }
   
   /* Ícono del camaleón */
   .camaleon-icon {
-    width: 40px; /* Ajusta el tamaño del ícono */
-    height: 40px;
+    width: 44px; /* Ajusta el tamaño del ícono */
+    height: 44px;
+    border-radius: 50%;
+    object-fit: contain;
+    background-color: #ffffff;
   }
   
   /* Texto "Camaleón IA" */
   .chatbot-label {
     margin: 0;
     font-size: 14px;
-    color: #dc3545; /* Rojo bonito */
+    color: #1e3c72; /* Azul oscuro para mejor contraste */
     font-weight: 600;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(30, 60, 114, 0.15);
   }
   
   /* Ventana del chat */
@@ -81,6 +89,17 @@
     font-size: 20px;
     cursor: pointer;
   }
+
+    .open-full-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: #ffffff;
+      font-size: 14px;
+      padding: 4px 8px;
+      margin-right: 6px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
   
   /* Mensajes del chat */
   .chatbot-messages {

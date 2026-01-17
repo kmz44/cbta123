@@ -1,18 +1,41 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import BackButton from '../../components/BackButton';
-
-const useIsDark = () => {
-  if (typeof document === 'undefined') return false;
-  return document.body.classList.contains('dark-mode');
-};
+import { supabase } from '../../lib/supabaseClient';
 
 const Programas = ({ setCurrentView }) => {
-  const isDark = useIsDark();
+  const [programas, setProgramas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCareer, setSelectedCareer] = useState(null);
+
+  useEffect(() => {
+    fetchCareers();
+  }, []);
+
+  const fetchCareers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('carreras_tecnicas')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProgramas(data || []);
+    } catch (error) {
+      console.error('Error fetching careers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Si hay una carrera seleccionada, mostrar vista de detalle
+  if (selectedCareer) {
+    return <CareerDetailView career={selectedCareer} onBack={() => setSelectedCareer(null)} setCurrentView={setCurrentView} />;
+  }
 
   const pageStyle = {
     paddingTop: '80px',
     minHeight: '100vh',
-    backgroundColor: isDark ? 'transparent' : '#f8f9fa'
+    backgroundColor: '#ffffff'
   };
 
   const containerStyle = {
@@ -24,17 +47,17 @@ const Programas = ({ setCurrentView }) => {
   const titleStyle = {
     fontSize: '28px',
     fontWeight: 'bold',
-    color: isDark ? '#e6eef8' : '#2c3e50',
+    color: '#28a745',
     marginBottom: '25px',
     textAlign: 'center'
   };
 
   const introStyle = {
-    background: isDark ? 'rgba(255,255,255,0.02)' : 'white',
+    background: '#e9f7ef',
     borderRadius: '15px',
     padding: '25px',
     marginBottom: '30px',
-    boxShadow: isDark ? '0 8px 30px rgba(0,0,0,0.6)' : '0 8px 25px rgba(0,0,0,0.1)',
+    boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
     textAlign: 'center'
   };
 
@@ -46,19 +69,13 @@ const Programas = ({ setCurrentView }) => {
   };
 
   const programCardStyle = {
-    background: isDark ? 'rgba(255,255,255,0.03)' : 'white',
+    background: '#f8fdf8',
     borderRadius: '15px',
     overflow: 'hidden',
-    boxShadow: isDark ? '0 12px 36px rgba(0,0,0,0.6)' : '0 8px 25px rgba(0,0,0,0.1)',
+    boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
     transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-    border: isDark ? '1px solid rgba(255,255,255,0.03)' : 'none'
-  };
-
-  const programHeaderStyle = {
-    padding: '25px',
-    textAlign: 'center',
-    color: 'white',
-    fontWeight: 'bold'
+    border: '1px solid #28a745',
+    cursor: 'pointer'
   };
 
   const programContentStyle = {
@@ -68,116 +85,62 @@ const Programas = ({ setCurrentView }) => {
   const programTitleStyle = {
     fontSize: '20px',
     fontWeight: 'bold',
-    marginBottom: '15px'
+    marginBottom: '15px',
+    color: '#28a745'
   };
 
   const programDescStyle = {
     fontSize: '14px',
-    color: '#666',
+    color: '#555',
     lineHeight: '1.6',
-    marginBottom: '20px'
+    marginBottom: '20px',
+    minHeight: '60px'
   };
 
-  const skillsListStyle = {
-    listStyle: 'none',
-    padding: 0,
-    margin: 0
-  };
-
-  const skillItemStyle = {
-    background: isDark ? 'rgba(255,255,255,0.02)' : '#f8f9fa',
-    padding: '8px 12px',
-    margin: '5px 0',
-    borderRadius: '15px',
-    fontSize: '13px',
-    color: isDark ? '#cfe8ff' : '#555'
-  };
-
-  const linkButtonStyle = {
-    display: 'inline-block',
-    background: '#3498db',
-    color: 'white',
-    padding: '10px 20px',
-    borderRadius: '20px',
-    textDecoration: 'none',
-    fontSize: '14px',
-    fontWeight: 'bold',
-    marginTop: '15px',
-    transition: 'background-color 0.3s ease'
-  };
-
-  const programas = [
-    {
-      title: 'Técnico Agropecuario',
-      description: 'Forma profesionales en producción agrícola y pecuaria, con enfoque en sustentabilidad y desarrollo rural.',
-      headerColor: 'linear-gradient(135deg, #28a745, #20c997)',
-      skills: ['Producción de cultivos', 'Manejo de especies pecuarias', 'Procesamiento de productos', 'Inocuidad alimentaria', 'Modelos de negocio'],
-      viewName: 'agropecuario'
-    },
-    {
-      title: 'Técnico en Programación',
-      description: 'Desarrolla competencias en software, aplicaciones web, bases de datos y tecnologías de la información.',
-      headerColor: 'linear-gradient(135deg, #6f42c1, #007bff)',
-      skills: ['Desarrollo de software', 'Aplicaciones web', 'Bases de datos', 'Programación móvil', 'Redes y seguridad'],
-      viewName: 'programacion'
-    },
-    {
-      title: 'Técnico en Ofimática',
-      description: 'Especializa en herramientas informáticas para oficina, diseño gráfico y administración empresarial.',
-      headerColor: 'linear-gradient(135deg, #fd7e14, #ffc107)',
-      skills: ['Suite de oficina', 'Diseño gráfico', 'Administración digital', 'Soporte técnico', 'Comunicación empresarial'],
-      viewName: 'ofimatica'
-    },
-    {
-      title: 'Técnico en Contabilidad',
-      description: 'Forma expertos en registro contable, análisis financiero y cumplimiento de obligaciones fiscales.',
-      headerColor: 'linear-gradient(135deg, #dc3545, #e74c3c)',
-      skills: ['Contabilidad general', 'Análisis financiero', 'Obligaciones fiscales', 'Auditoría básica', 'Sistemas contables'],
-      viewName: 'contabilidad'
-    },
-    {
-      title: 'Técnico en Sistemas de Producción Pecuaria',
-      description: 'Especializa en manejo integral de especies animales para producción de alimentos.',
-      headerColor: 'linear-gradient(135deg, #17a2b8, #138496)',
-      skills: ['Bovinos y especies mayores', 'Porcicultura y avicultura', 'Especies menores', 'Nutrición animal', 'Sanidad pecuaria'],
-      viewName: 'spp'
-    }
-  ];
-
-  const ProgramCard = ({ title, description, headerColor, skills, viewName }) => (
-    <div 
+  const ProgramCard = ({ career }) => (
+    <div
       style={programCardStyle}
+      onClick={() => setSelectedCareer(career)}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-8px)';
-        e.currentTarget.style.boxShadow = isDark ? '0 15px 35px rgba(0,0,0,0.8)' : '0 15px 35px rgba(0,0,0,0.15)';
+        e.currentTarget.style.boxShadow = '0 15px 35px rgba(40, 167, 69, 0.3)';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = isDark ? '0 12px 36px rgba(0,0,0,0.6)' : '0 8px 25px rgba(0,0,0,0.1)';
+        e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.1)';
       }}
     >
-      <div style={{...programHeaderStyle, background: headerColor}}>
-        <h3 style={programTitleStyle}>{title}</h3>
-      </div>
+      {career.imagen_url && (
+        <div style={{ width: '100%', height: '180px', overflow: 'hidden' }}>
+          <img
+            src={career.imagen_url}
+            alt={career.nombre}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        </div>
+      )}
       <div style={programContentStyle}>
-        <p style={{...programDescStyle, color: isDark ? '#e2e8f0' : '#666'}}>{description}</p>
-        <h4 style={{color: isDark ? '#e6eef8' : '#2c3e50', marginBottom: '10px', fontSize: '16px'}}>Competencias principales:</h4>
-        <ul style={skillsListStyle}>
-          {skills.map((skill, index) => (
-            <li key={index} style={skillItemStyle}>• {skill}</li>
-          ))}
-        </ul>
-        <button 
-          onClick={() => setCurrentView(viewName)}
+        <h3 style={programTitleStyle}>{career.nombre}</h3>
+        <p style={programDescStyle}>{career.descripcion || 'Formación técnica de excelencia'}</p>
+
+        <button
           style={{
-            ...linkButtonStyle,
+            display: 'inline-block',
+            background: '#28a745',
+            color: 'white',
+            padding: '10px 20px',
+            borderRadius: '20px',
             border: 'none',
-            cursor: 'pointer'
+            fontSize: '14px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            transition: 'background-color 0.3s ease',
+            width: '100%'
           }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = '#2980b9'}
-          onMouseLeave={(e) => e.target.style.backgroundColor = '#3498db'}
+          onMouseEnter={(e) => e.target.style.backgroundColor = '#218838'}
+          onMouseLeave={(e) => e.target.style.backgroundColor = '#28a745'}
         >
-          Ver detalles →
+          Ver más información →
         </button>
       </div>
     </div>
@@ -188,10 +151,10 @@ const Programas = ({ setCurrentView }) => {
       <BackButton onClick={() => setCurrentView('home')} />
       <div style={containerStyle}>
         <h1 style={titleStyle}>📚 Programas Educativos</h1>
-        
+
         <section style={introStyle}>
-          <h2 style={{color: isDark ? '#e6eef8' : '#2c3e50', marginBottom: '20px'}}>Formación Técnica de Excelencia</h2>
-          <p style={{color: isDark ? '#e2e8f0' : '#666', fontSize: '16px', lineHeight: '1.6', marginBottom: '20px'}}>
+          <h2 style={{ color: '#28a745', marginBottom: '20px' }}>Formación Técnica de Excelencia</h2>
+          <p style={{ color: '#555', fontSize: '16px', lineHeight: '1.6', marginBottom: '20px' }}>
             En el CBTA 134 ofrecemos programas educativos de nivel medio superior que combinan formación académica sólida con competencias técnicas especializadas. Nuestros egresados están preparados tanto para incorporarse al mercado laboral como para continuar estudios superiores.
           </p>
           <div style={{
@@ -201,122 +164,201 @@ const Programas = ({ setCurrentView }) => {
             marginTop: '30px'
           }}>
             <div>
-              <h4 style={{color: '#3498db', fontSize: '24px', margin: '0 0 5px 0'}}>5</h4>
-              <p style={{color: isDark ? '#c8cdd3' : '#666', fontSize: '14px', margin: 0}}>Carreras Técnicas</p>
+              <h4 style={{ color: '#28a745', fontSize: '24px', margin: '0 0 5px 0' }}>{programas.length}</h4>
+              <p style={{ color: '#555', fontSize: '14px', margin: 0 }}>Carreras Técnicas</p>
             </div>
             <div>
-              <h4 style={{color: '#28a745', fontSize: '24px', margin: '0 0 5px 0'}}>3</h4>
-              <p style={{color: isDark ? '#c8cdd3' : '#666', fontSize: '14px', margin: 0}}>Años de Duración</p>
+              <h4 style={{ color: '#28a745', fontSize: '24px', margin: '0 0 5px 0' }}>3</h4>
+              <p style={{ color: '#555', fontSize: '14px', margin: 0 }}>Años de Duración</p>
             </div>
             <div>
-              <h4 style={{color: '#fd7e14', fontSize: '24px', margin: '0 0 5px 0'}}>100%</h4>
-              <p style={{color: isDark ? '#c8cdd3' : '#666', fontSize: '14px', margin: 0}}>Validez Oficial</p>
+              <h4 style={{ color: '#28a745', fontSize: '24px', margin: '0 0 5px 0' }}>100%</h4>
+              <p style={{ color: '#555', fontSize: '14px', margin: 0 }}>Validez Oficial</p>
             </div>
           </div>
         </section>
 
         <section>
-          <div style={programsGridStyle}>
-            {programas.map((programa, index) => (
-              <ProgramCard key={index} {...programa} />
-            ))}
-          </div>
+          {loading ? (
+            <p style={{ textAlign: 'center', color: '#666' }}>Cargando carreras técnicas...</p>
+          ) : programas.length > 0 ? (
+            <div style={programsGridStyle}>
+              {programas.map((programa) => (
+                <ProgramCard key={programa.id} career={programa} />
+              ))}
+            </div>
+          ) : (
+            <p style={{ textAlign: 'center', color: '#999', padding: '40px' }}>No hay carreras registradas por el momento.</p>
+          )}
         </section>
+      </div>
+    </div>
+  );
+};
 
-        <section style={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          borderRadius: '20px',
-          padding: '40px 20px',
-          textAlign: 'center',
-          color: 'white',
-          marginTop: '40px'
-        }}>
-          <h3 style={{fontSize: '24px', marginBottom: '20px'}}>🎯 ¿Por qué estudiar en el CBTA 134?</h3>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '25px',
-            marginTop: '30px'
-          }}>
-            <div>
-              <div style={{fontSize: '40px', marginBottom: '10px'}}>🏆</div>
-              <h4 style={{fontSize: '18px', marginBottom: '10px'}}>Excelencia</h4>
-              <p style={{fontSize: '14px', opacity: '0.9'}}>Programas reconocidos con estándares de calidad</p>
-            </div>
-            <div>
-              <div style={{fontSize: '40px', marginBottom: '10px'}}>💼</div>
-              <h4 style={{fontSize: '18px', marginBottom: '10px'}}>Empleabilidad</h4>
-              <p style={{fontSize: '14px', opacity: '0.9'}}>Alta demanda laboral de nuestros egresados</p>
-            </div>
-            <div>
-              <div style={{fontSize: '40px', marginBottom: '10px'}}>🌱</div>
-              <h4 style={{fontSize: '18px', marginBottom: '10px'}}>Sustentabilidad</h4>
-              <p style={{fontSize: '14px', opacity: '0.9'}}>Enfoque en desarrollo sostenible</p>
-            </div>
-            <div>
-              <div style={{fontSize: '40px', marginBottom: '10px'}}>🚀</div>
-              <h4 style={{fontSize: '18px', marginBottom: '10px'}}>Innovación</h4>
-              <p style={{fontSize: '14px', opacity: '0.9'}}>Tecnología y métodos actualizados</p>
-            </div>
-          </div>
-        </section>
+// Componente de vista detallada de carrera
+const CareerDetailView = ({ career, onBack, setCurrentView }) => {
+  const pageStyle = {
+    paddingTop: '80px',
+    minHeight: '100vh',
+    backgroundColor: '#ffffff',
+    padding: '80px 20px 40px 20px'
+  };
 
-        <section style={{
-          background: isDark ? 'rgba(255,255,255,0.02)' : 'white',
-          borderRadius: '15px',
-          padding: '30px',
-          marginTop: '30px',
-          boxShadow: isDark ? '0 12px 36px rgba(0,0,0,0.6)' : '0 8px 25px rgba(0,0,0,0.1)',
-          textAlign: 'center'
-        }}>
-          <h3 style={{color: isDark ? '#e6eef8' : '#2c3e50', marginBottom: '20px'}}>📋 Proceso de Admisión</h3>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '20px',
-            marginTop: '25px'
-          }}>
-            <div style={{padding: '20px', background: isDark ? 'rgba(255,255,255,0.03)' : '#f8f9fa', borderRadius: '10px'}}>
-              <div style={{fontSize: '30px', marginBottom: '10px'}}>1️⃣</div>
-              <h4 style={{color: isDark ? '#e6eef8' : '#2c3e50', marginBottom: '10px'}}>Registro</h4>
-              <p style={{color: isDark ? '#c8cdd3' : '#666', fontSize: '14px'}}>Inscríbete en línea o presencialmente</p>
+  const containerStyle = {
+    maxWidth: '900px',
+    margin: '0 auto'
+  };
+
+  const headerStyle = {
+    background: '#28a745',
+    color: 'white',
+    padding: '40px',
+    borderRadius: '15px',
+    marginBottom: '30px',
+    textAlign: 'center'
+  };
+
+  const sectionStyle = {
+    background: 'white',
+    padding: '30px',
+    borderRadius: '15px',
+    marginBottom: '20px',
+    boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+    border: '1px solid #e0e0e0'
+  };
+
+  const sectionTitleStyle = {
+    fontSize: '20px',
+    fontWeight: 'bold',
+    color: '#28a745',
+    marginBottom: '15px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px'
+  };
+
+  const contentStyle = {
+    fontSize: '16px',
+    color: '#555',
+    lineHeight: '1.8',
+    whiteSpace: 'pre-wrap'
+  };
+
+  return (
+    <div style={pageStyle}>
+      <BackButton onClick={onBack} text="← Regresar a Carreras" />
+
+      <div style={containerStyle}>
+        {/* Header con imagen */}
+        {career.imagen_url && (
+          <div style={{ width: '100%', height: '300px', borderRadius: '15px', overflow: 'hidden', marginBottom: '20px' }}>
+            <img
+              src={career.imagen_url}
+              alt={career.nombre}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          </div>
+        )}
+
+        <div style={headerStyle}>
+          <h1 style={{ margin: '0 0 10px 0', fontSize: '32px' }}>{career.nombre}</h1>
+          {career.descripcion && <p style={{ margin: 0, fontSize: '18px', opacity: 0.95 }}>{career.descripcion}</p>}
+        </div>
+
+        {/* Programa de Competencias */}
+        {career.programa_competencia && (
+          <div style={sectionStyle}>
+            <h2 style={sectionTitleStyle}>📋 Programa de Competencias</h2>
+            <p style={contentStyle}>{career.programa_competencia}</p>
+          </div>
+        )}
+
+        {/* Justificación */}
+        {career.justificacion && (
+          <div style={sectionStyle}>
+            <h2 style={sectionTitleStyle}>💡 Justificación</h2>
+            <p style={contentStyle}>{career.justificacion}</p>
+          </div>
+        )}
+
+        {/* Perfil de Egreso */}
+        {career.perfil_egreso && (
+          <div style={sectionStyle}>
+            <h2 style={sectionTitleStyle}>🎓 Perfil de Egreso</h2>
+            <p style={contentStyle}>{career.perfil_egreso}</p>
+          </div>
+        )}
+
+        {/* Área de Especialización */}
+        {career.area_especializacion && (
+          <div style={sectionStyle}>
+            <h2 style={sectionTitleStyle}>🔧 Área de Especialización</h2>
+            <p style={contentStyle}>{career.area_especializacion}</p>
+          </div>
+        )}
+
+        {/* Habilidades Socioemocionales */}
+        {career.habilidades_socioemocionales && (
+          <div style={sectionStyle}>
+            <h2 style={sectionTitleStyle}>🤝 Habilidades Socioemocionales</h2>
+            <p style={contentStyle}>{career.habilidades_socioemocionales}</p>
+          </div>
+        )}
+
+        {/* Oportunidades Profesionales */}
+        {career.oportunidades_profesionales && (
+          <div style={sectionStyle}>
+            <h2 style={sectionTitleStyle}>💼 Oportunidades Profesionales</h2>
+            <p style={contentStyle}>{career.oportunidades_profesionales}</p>
+          </div>
+        )}
+
+        {/* Plan de Estudios PDF con Previsualización */}
+        {career.plan_estudios_url && (
+          <div style={{ ...sectionStyle, padding: '30px' }}>
+            <h2 style={{ ...sectionTitleStyle, justifyContent: 'center', textAlign: 'center' }}>📄 Plan de Estudios</h2>
+            <p style={{ marginBottom: '20px', color: '#555', textAlign: 'center' }}>Vista previa del documento oficial del plan de estudios</p>
+
+            {/* PDF Viewer */}
+            <div style={{ marginBottom: '20px', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.15)' }}>
+              <iframe
+                src={`${career.plan_estudios_url}#page=${career.pdf_start_page || 1}`}
+                style={{
+                  width: '100%',
+                  height: '600px',
+                  border: 'none'
+                }}
+                title="Plan de Estudios"
+              />
             </div>
-            <div style={{padding: '20px', background: isDark ? 'rgba(255,255,255,0.03)' : '#f8f9fa', borderRadius: '10px'}}>
-              <div style={{fontSize: '30px', marginBottom: '10px'}}>2️⃣</div>
-              <h4 style={{color: isDark ? '#e6eef8' : '#2c3e50', marginBottom: '10px'}}>Documentos</h4>
-              <p style={{color: isDark ? '#c8cdd3' : '#666', fontSize: '14px'}}>Entrega documentación requerida</p>
-            </div>
-            <div style={{padding: '20px', background: isDark ? 'rgba(255,255,255,0.03)' : '#f8f9fa', borderRadius: '10px'}}>
-              <div style={{fontSize: '30px', marginBottom: '10px'}}>3️⃣</div>
-              <h4 style={{color: isDark ? '#e6eef8' : '#2c3e50', marginBottom: '10px'}}>Examen</h4>
-              <p style={{color: isDark ? '#c8cdd3' : '#666', fontSize: '14px'}}>Presenta examen de admisión</p>
-            </div>
-            <div style={{padding: '20px', background: isDark ? 'rgba(255,255,255,0.03)' : '#f8f9fa', borderRadius: '10px'}}>
-              <div style={{fontSize: '30px', marginBottom: '10px'}}>4️⃣</div>
-              <h4 style={{color: isDark ? '#e6eef8' : '#2c3e50', marginBottom: '10px'}}>Inscripción</h4>
-              <p style={{color: isDark ? '#c8cdd3' : '#666', fontSize: '14px'}}>Confirma tu lugar y comienza</p>
+
+            {/* Download Button */}
+            <div style={{ textAlign: 'center' }}>
+              <a
+                href={career.plan_estudios_url}
+                download
+                style={{
+                  display: 'inline-block',
+                  background: '#28a745',
+                  color: 'white',
+                  padding: '15px 30px',
+                  borderRadius: '25px',
+                  textDecoration: 'none',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  transition: 'background-color 0.3s ease',
+                  boxShadow: '0 4px 10px rgba(40, 167, 69, 0.3)'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#218838'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = '#28a745'}
+              >
+                📥 Descargar Plan de Estudios (PDF)
+              </a>
+              <p style={{ marginTop: '10px', fontSize: '13px', color: '#777' }}>Mostrando desde la página {career.pdf_start_page || 1}</p>
             </div>
           </div>
-          <a 
-            href="/cbta/contacto" 
-            style={{
-              display: 'inline-block',
-              background: '#28a745',
-              color: 'white',
-              padding: '12px 30px',
-              borderRadius: '25px',
-              textDecoration: 'none',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              marginTop: '25px',
-              transition: 'background-color 0.3s ease'
-            }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#218838'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = '#28a745'}
-          >
-            📞 Más información
-          </a>
-        </section>
+        )}
       </div>
     </div>
   );

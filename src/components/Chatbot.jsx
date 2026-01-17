@@ -1,41 +1,80 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { supabase } from "../lib/supabaseClient";
 import ChatbotPrompt from "./ChatbotPrompt";
+import {
+  loadChatState,
+  saveChatState,
+  createConversation,
+  getActiveConversation,
+  upsertConversation
+} from "../utils/chatLocalDb";
 import "./Chatbot.css";
 
 const Chatbot = () => {
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState([]);
+  const [chatState, setChatState] = useState({ conversations: [], activeId: null });
   const [isLoading, setIsLoading] = useState(false);
+  const [chatbotConfig, setChatbotConfig] = useState(null);
   const [isChatOpen, setIsChatOpen] = useState(() => {
     // Cargar el estado de apertura del chatbot desde localStorage
     const savedChatState = localStorage.getItem("isChatOpen");
     return savedChatState ? JSON.parse(savedChatState) : false;
   });
+  const contextCacheRef = useRef({ value: null, timestamp: 0 });
 
-  // Cargar las conversaciones guardadas al iniciar
+  // Cargar conversaciones desde la BD local (IndexedDB)
   useEffect(() => {
-    const savedMessages = localStorage.getItem("chatbotMessages");
-    if (savedMessages) {
-      setMessages(JSON.parse(savedMessages));
-    } else {
-      // Agregar mensaje de bienvenida si no hay conversaciones guardadas
-      const welcomeMessage = {
-        text: "¡Hola! Soy <strong>Camaleón IA</strong>, tu asistente virtual del CBTA 134. Estoy aquí para ayudarte con información sobre nuestra institución, carreras, clubs y más. ¿En qué puedo ayudarte hoy?",
-        sender: "bot"
-      };
-      setMessages([welcomeMessage]);
-    }
+    const initChat = async () => {
+      const state = await loadChatState();
+      if (!state.conversations.length) {
+        const welcomeMessage = {
+          id: `msg-${Date.now()}`,
+          text: "¡Hola! Soy **Camaleón IA**, tu asistente virtual del CBTA 134. Estoy aquí para ayudarte con información sobre nuestra institución, carreras, clubs y más. ¿En qué puedo ayudarte hoy?",
+          sender: "bot",
+          createdAt: new Date().toISOString()
+        };
+        const conversation = createConversation("Camaleón IA");
+        conversation.messages.push(welcomeMessage);
+        const nextState = {
+          conversations: [conversation],
+          activeId: conversation.id
+        };
+        setChatState(nextState);
+        await saveChatState(nextState);
+        return;
+      }
+      setChatState(state);
+    };
+
+    initChat();
   }, []);
 
-  // Guardar las conversaciones en localStorage cada vez que cambien
   useEffect(() => {
-    localStorage.setItem("chatbotMessages", JSON.stringify(messages));
-  }, [messages]);
+    if (!chatState.conversations.length) return;
+    saveChatState(chatState);
+  }, [chatState]);
 
   // Guardar el estado de apertura del chatbot en localStorage cada vez que cambie
   useEffect(() => {
     localStorage.setItem("isChatOpen", JSON.stringify(isChatOpen));
   }, [isChatOpen]);
+
+  useEffect(() => {
+    const fetchChatbotConfig = async () => {
+      const { data, error } = await supabase
+        .from("chatbot_config")
+        .select("*")
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!error) {
+        setChatbotConfig(data || null);
+      }
+    };
+
+    fetchChatbotConfig();
+  }, []);
 
   // Función para formatear texto (negritas, cursivas, saltos de línea)
   const formatText = (text) => {
@@ -45,78 +84,208 @@ const Chatbot = () => {
     return text;
   };
 
+  const stripHtml = (htmlText) => htmlText.replace(/<[^>]*>/g, "");
+
+  const getBaseUrl = (provider, customBaseUrl) => {
+    if (customBaseUrl) return customBaseUrl.replace(/\/$/, "");
+    if (provider === "groq") return "https://api.groq.com/openai/v1";
+    if (provider === "gemini") return "https://generativelanguage.googleapis.com/v1beta";
+    return "https://api.groq.com/openai/v1";
+  };
+
+  const getApiKey = (provider) => {
+    if (provider === "groq") return chatbotConfig?.groq_api_key || chatbotConfig?.api_key || "";
+    if (provider === "gemini") return chatbotConfig?.gemini_api_key || chatbotConfig?.api_key || "";
+    return chatbotConfig?.api_key || "";
+  };
+
+  const getChatbotContext = async () => {
+    if (!chatbotConfig?.enable_db_context) return "";
+
+    const now = Date.now();
+    const cacheMs = 5 * 60 * 1000;
+    if (contextCacheRef.current.value && now - contextCacheRef.current.timestamp < cacheMs) {
+      return contextCacheRef.current.value;
+    }
+
+    const { data, error } = await supabase.rpc("get_chatbot_context");
+    if (error) {
+      console.warn("No se pudo cargar contexto de BD:", error.message);
+      return "";
+    }
+
+    const contextText = JSON.stringify(data || {}, null, 2);
+    contextCacheRef.current = { value: contextText, timestamp: now };
+    return contextText;
+  };
+
   // Función para manejar el envío de mensajes
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    // Agregar el mensaje del usuario al chat
-    const userMessage = { text: input, sender: "user" };
-    setMessages((prevMessages) => [...prevMessages, userMessage]);
+    if (chatbotConfig && chatbotConfig.enabled === false) {
+      const disabledMessage = { text: "El chatbot está deshabilitado temporalmente.", sender: "bot" };
+      setChatState((prev) => {
+        const active = getActiveConversation(prev);
+        if (!active) return prev;
+        const updated = {
+          ...active,
+          messages: [...active.messages, { ...disabledMessage, id: `msg-${Date.now()}`, createdAt: new Date().toISOString() }]
+        };
+        return upsertConversation(prev, updated);
+      });
+      return;
+    }
+
+    const userMessage = {
+      id: `msg-${Date.now()}`,
+      text: input,
+      sender: "user",
+      createdAt: new Date().toISOString()
+    };
+
+    // Guardar pregunta en BD (solo texto)
+    try {
+      await supabase.from("chatbot_questions").insert([
+        {
+          question_text: input,
+          source_page: window.location.pathname,
+          conversation_id: chatState.activeId || null,
+          user_agent: navigator.userAgent
+        }
+      ]);
+    } catch {
+      // silencioso
+    }
+
+    setChatState((prev) => {
+      const active = getActiveConversation(prev);
+      if (!active) return prev;
+      const updated = { ...active, messages: [...active.messages, userMessage] };
+      return upsertConversation(prev, updated);
+    });
     setInput("");
     setIsLoading(true);
 
     try {
-      // Crear el historial de la conversación
-      const conversationHistory = messages
-        .map((msg) => `${msg.sender === "user" ? "Usuario" : "Chatbot"}: ${msg.text}`)
-        .join("\n");
+      const contextText = await getChatbotContext();
+      const systemPrompt = (chatbotConfig?.system_prompt || ChatbotPrompt).trim();
+      const fullSystemPrompt = contextText
+        ? `${systemPrompt}\n\nContexto de la base de datos (JSON):\n${contextText}`
+        : systemPrompt;
 
-      // Configurar la API key de Google Gemini
-  const API_KEY = "AIzaSyCAZbQCJPHiBM2AEyGFu1p4VRNNFsFXuj0";
-      const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+      const activeConversation = getActiveConversation(chatState);
+      const historyMessages = (activeConversation?.messages || []).slice(-10).map((msg) => ({
+        role: msg.sender === "user" ? "user" : "assistant",
+        content: stripHtml(msg.text)
+      }));
 
-      // Preparar el contenido del prompt
-      const fullPrompt = `${ChatbotPrompt}\n\nHistorial de la conversación:\n${conversationHistory}\n\nUsuario: ${input}`;
+      const callProvider = async (providerToUse) => {
+        const apiKey = getApiKey(providerToUse);
+        if (!apiKey) {
+          throw new Error(`No hay API key configurada para ${providerToUse}.`);
+        }
 
-      console.log("Enviando solicitud a:", API_URL);
-      console.log("Prompt:", fullPrompt);
+        const baseUrl = getBaseUrl(providerToUse, chatbotConfig?.base_url || "");
+        const model = chatbotConfig?.model || (providerToUse === "gemini" ? "gemini-3.0-flash" : "llama-3.1-8b-instant");
+        const apiUrl = providerToUse === "gemini"
+          ? `${baseUrl}/models/${model}:generateContent?key=${apiKey}`
+          : `${baseUrl}/chat/completions`;
 
-      // Enviar la solicitud a la API de Google Gemini
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: fullPrompt
-            }]
-          }]
-        }),
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(providerToUse === "gemini" ? {} : { Authorization: `Bearer ${apiKey}` })
+          },
+          body: JSON.stringify(
+            providerToUse === "gemini"
+              ? {
+                  contents: [{
+                    parts: [{
+                      text: `${fullSystemPrompt}\n\nHistorial de la conversación:\n${historyMessages
+                        .map((msg) => `${msg.role === "user" ? "Usuario" : "Chatbot"}: ${msg.content}`)
+                        .join("\n")}
+\n\nUsuario: ${input}`
+                    }]
+                  }]
+                }
+              : {
+                  model,
+                  messages: [
+                    { role: "system", content: fullSystemPrompt },
+                    ...historyMessages,
+                    { role: "user", content: input }
+                  ],
+                  temperature: 0.3
+                }
+          )
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Error de la API (${providerToUse}): ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+
+        if (providerToUse === "gemini" && data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+          return data.candidates[0].content.parts[0].text;
+        }
+
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+          return data.choices[0].message.content;
+        }
+
+        if (data.error) {
+          throw new Error(data.error.message);
+        }
+
+        throw new Error("Respuesta no válida del proveedor.");
+      };
+
+      const configuredProvider = (chatbotConfig?.provider || "groq").toLowerCase();
+      const primaryProvider = (chatbotConfig?.primary_provider || configuredProvider || "groq").toLowerCase();
+      const fallbackEnabled = chatbotConfig?.fallback_enabled === true;
+      const secondaryProvider = primaryProvider === "groq" ? "gemini" : "groq";
+
+      let botResponse = null;
+
+      try {
+        botResponse = await callProvider(fallbackEnabled ? primaryProvider : configuredProvider);
+      } catch (primaryError) {
+        if (fallbackEnabled) {
+          botResponse = await callProvider(secondaryProvider);
+        } else {
+          throw primaryError;
+        }
+      }
+
+      const formattedText = formatText(botResponse);
+      const botMessage = {
+        id: `msg-${Date.now()}`,
+        text: formattedText,
+        sender: "bot",
+        createdAt: new Date().toISOString()
+      };
+      setChatState((prev) => {
+        const active = getActiveConversation(prev);
+        if (!active) return prev;
+        const updated = { ...active, messages: [...active.messages, botMessage] };
+        return upsertConversation(prev, updated);
       });
-
-      console.log("Estado de la respuesta:", response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error de la API:", errorText);
-        throw new Error(`Error de la API: ${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log("Respuesta de la API:", data);
-
-      // Agregar la respuesta del bot al chat
-      if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
-        const botResponse = data.candidates[0].content.parts[0].text;
-        const formattedText = formatText(botResponse);
-        const botMessage = { text: formattedText, sender: "bot" };
-        setMessages((prevMessages) => [...prevMessages, botMessage]);
-      } else if (data.error) {
-        console.error("Error de la API:", data.error);
-        const botMessage = { text: `Lo siento, ocurrió un error: ${data.error.message}`, sender: "bot" };
-        setMessages((prevMessages) => [...prevMessages, botMessage]);
-      } else {
-        console.log("Respuesta completa de la API:", data);
-        const botMessage = { text: "Lo siento, no pude procesar tu mensaje. ¿Podrías intentar de nuevo?", sender: "bot" };
-        setMessages((prevMessages) => [...prevMessages, botMessage]);
-      }
     } catch (error) {
-      console.error("Error completo:", error);
       const botMessage = { text: `Error al conectar con Camaleón IA: ${error.message}. Verifica tu conexión a internet e intenta de nuevo.`, sender: "bot" };
-      setMessages((prevMessages) => [...prevMessages, botMessage]);
+      setChatState((prev) => {
+        const active = getActiveConversation(prev);
+        if (!active) return prev;
+        const updated = {
+          ...active,
+          messages: [...active.messages, { ...botMessage, id: `msg-${Date.now()}`, createdAt: new Date().toISOString() }]
+        };
+        return upsertConversation(prev, updated);
+      });
     }
 
     setIsLoading(false);
@@ -137,14 +306,22 @@ const Chatbot = () => {
         <div className="chatbot-window">
           <div className="chatbot-header">
             <h3>Camaleón IA</h3>
+            <button
+              className="open-full-btn"
+              onClick={() => window.open("/chatbot", "_blank")}
+              title="Abrir en pantalla completa"
+              type="button"
+            >
+              ⤢
+            </button>
             <button className="close-btn" onClick={() => setIsChatOpen(false)}>
               ×
             </button>
           </div>
           <div className="chatbot-messages">
-            {messages.map((message, index) => (
-              <div key={index} className={`message ${message.sender}`}>
-                <div dangerouslySetInnerHTML={{ __html: message.text }} />
+            {getActiveConversation(chatState)?.messages.map((message) => (
+              <div key={message.id} className={`message ${message.sender}`}>
+                <div dangerouslySetInnerHTML={{ __html: formatText(message.text) }} />
               </div>
             ))}
             {isLoading && <div className="message bot">Escribiendo...</div>}

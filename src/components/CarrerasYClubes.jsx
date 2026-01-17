@@ -119,7 +119,7 @@ const CarrerasYClubes = ({ onBack, setCurrentView }) => {
   };
 
   const buttonStyle = {
-    backgroundColor: isDark ? '#2d3748' : '#1e3c72',
+    backgroundColor: 'var(--primary-color)',
     color: 'white',
     border: 'none',
     padding: '12px 24px',
@@ -189,8 +189,8 @@ const CarrerasYClubes = ({ onBack, setCurrentView }) => {
               </p>
               <button 
                 style={buttonStyle}
-                onMouseEnter={(e) => e.target.style.backgroundColor = isDark ? '#4a5568' : '#2a5298'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = isDark ? '#2d3748' : '#1e3c72'}
+                onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--link-hover)'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--primary-color)'}
               >
                 Ver más información
               </button>
