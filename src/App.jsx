@@ -73,6 +73,12 @@ const App = () => {
       path: 'contacto'
     },
     {
+      image: "/images/baetam.jpg",
+      title: "BAETAM",
+      description: "Bachillerato Autoplaneado - Educación flexible para adultos.",
+      path: 'baetam'
+    },
+    {
       image: "/images/maestros-hero.png",
       title: "Maestros",
       description: "Recursos y enlaces utiles para el personal docente.",
