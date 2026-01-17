@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 
 
 const Footer = () => {
+  const navigate = useNavigate();
   const [footerConfig, setFooterConfig] = useState(null);
   const [footerLinks, setFooterLinks] = useState([]);
 
@@ -39,7 +41,17 @@ const Footer = () => {
         <div className="footer-section">
           <h3>Autores</h3>
           <p>Créditos de la página</p>
-          <a href="/creditos" className="footer-link">Ver autores</a>
+          <a
+            href="#/creditos"
+            className="footer-link"
+            onClick={(event) => {
+              event.preventDefault();
+              navigate('/creditos');
+              window.location.hash = '#/creditos';
+            }}
+          >
+            Ver autores
+          </a>
         </div>
 
     

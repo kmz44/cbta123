@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import ChatbotPrompt from "./ChatbotPrompt";
 import {
@@ -11,6 +12,7 @@ import {
 import "./Chatbot.css";
 
 const Chatbot = () => {
+  const navigate = useNavigate();
   const [input, setInput] = useState("");
   const [chatState, setChatState] = useState({ conversations: [], activeId: null });
   const [isLoading, setIsLoading] = useState(false);
@@ -308,7 +310,10 @@ const Chatbot = () => {
             <h3>Camaleón IA</h3>
             <button
               className="open-full-btn"
-              onClick={() => window.open("/chatbot", "_blank")}
+              onClick={() => {
+                navigate('/chatbot');
+                window.location.hash = '#/chatbot';
+              }}
               title="Abrir en pantalla completa"
               type="button"
             >
